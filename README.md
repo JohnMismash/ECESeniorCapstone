@@ -1,1 +1,8 @@
 # ECESeniorCapstone
+
+# Team Members:
+#
+#
+#
+#
+#

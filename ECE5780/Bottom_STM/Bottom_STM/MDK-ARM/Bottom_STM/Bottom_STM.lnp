@@ -1,0 +1,25 @@
+--cpu Cortex-M0
+"bottom_stm\startup_stm32f072xb.o"
+"bottom_stm\main.o"
+"bottom_stm\stm32f0xx_it.o"
+"bottom_stm\stm32f0xx_hal_msp.o"
+"bottom_stm\stm32f0xx_hal_tim.o"
+"bottom_stm\stm32f0xx_hal_tim_ex.o"
+"bottom_stm\stm32f0xx_hal_rcc.o"
+"bottom_stm\stm32f0xx_hal_rcc_ex.o"
+"bottom_stm\stm32f0xx_hal.o"
+"bottom_stm\stm32f0xx_hal_i2c.o"
+"bottom_stm\stm32f0xx_hal_i2c_ex.o"
+"bottom_stm\stm32f0xx_hal_gpio.o"
+"bottom_stm\stm32f0xx_hal_dma.o"
+"bottom_stm\stm32f0xx_hal_cortex.o"
+"bottom_stm\stm32f0xx_hal_pwr.o"
+"bottom_stm\stm32f0xx_hal_pwr_ex.o"
+"bottom_stm\stm32f0xx_hal_flash.o"
+"bottom_stm\stm32f0xx_hal_flash_ex.o"
+"bottom_stm\stm32f0xx_hal_exti.o"
+"bottom_stm\system_stm32f0xx.o"
+--strict --scatter "Bottom_STM\Bottom_STM.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "Bottom_STM.map" -o Bottom_STM\Bottom_STM.axf

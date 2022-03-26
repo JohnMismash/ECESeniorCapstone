@@ -8,6 +8,7 @@ V2
   ******************************************************************************
   * @file           : main.c
   * @brief          : Main program body
+	* @author					: John (Jack) Mismash, u1179865 - University of Utah - ECE 5780
   ******************************************************************************
   * @attention
   *
@@ -47,16 +48,21 @@ V2
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-
 /* USER CODE BEGIN PV */
-	volatile uint8_t read_data;
+volatile uint8_t read_data;
+char START_MOTOR = 0x44;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+
 /* USER CODE BEGIN PFP */
-	void TransmitChar (char x);
-	void TransmitString (char* x);
+void TransmitChar (char x);
+void TransmitString (char* x);
+void TransmitToBottomBoard(void);
+void ReceiveFromBottomBoard(void);
+	
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -81,59 +87,53 @@ int main(void)
 
   /* Initialize all configured peripherals */
   /* USER CODE BEGIN 2 */
-		//Initialize LED PINS
-		//LED code
-		GPIO_InitTypeDef initStrLED = {GPIO_PIN_6| GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
-		GPIO_MODE_OUTPUT_PP,
-		GPIO_SPEED_FREQ_LOW,
-		GPIO_NOPULL};
-		HAL_GPIO_Init(GPIOC, &initStrLED); // Initialize pins PC8 & PC9 & PC6 * PC7
+	//Initialize LED PINS
+	GPIO_InitTypeDef initStrLED = {GPIO_PIN_6| GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
+	GPIO_MODE_OUTPUT_PP,
+	GPIO_SPEED_FREQ_LOW,
+	GPIO_NOPULL};
 	
-		//INITIALIZE THE TX LINE
-		GPIO_InitTypeDef initStr = {GPIO_PIN_10,
-		GPIO_MODE_AF_PP,
-		GPIO_SPEED_FREQ_LOW,
-		GPIO_NOPULL};
-		
-		//THIS IS THE RX LINE
-		GPIO_InitTypeDef initStr1 = {GPIO_PIN_11,
-		GPIO_MODE_AF_PP,
-		GPIO_SPEED_FREQ_LOW,
-		GPIO_PULLUP};
-		
-		HAL_GPIO_Init(GPIOB, &initStr);
-		HAL_GPIO_Init(GPIOB, &initStr1);
-		
-		//SETS ALTERNATE FUCTION 4 FOR PINS PB10 AND PB11
-		GPIOB->AFR[1] |= (1 << 10);
-		GPIOB->AFR[1] |= (1 << 14);
+	// Initialize pins PC8 & PC9 & PC6 * PC7
+	HAL_GPIO_Init(GPIOC, &initStrLED);
+	
+	//INITIALIZE THE TX LINE
+	GPIO_InitTypeDef initStr = {GPIO_PIN_10,
+	GPIO_MODE_AF_PP,
+	GPIO_SPEED_FREQ_LOW,
+	GPIO_NOPULL};
+	
+	//THIS IS THE RX LINE
+	GPIO_InitTypeDef initStr1 = {GPIO_PIN_11,
+	GPIO_MODE_AF_PP,
+	GPIO_SPEED_FREQ_LOW,
+	GPIO_PULLUP};
+	
+	HAL_GPIO_Init(GPIOB, &initStr);
+	HAL_GPIO_Init(GPIOB, &initStr1);
+	
+	//SETS ALTERNATE FUCTION 4 FOR PINS PB10 AND PB11
+	GPIOB -> AFR[1] |= (1 << 10);
+	GPIOB -> AFR[1] |= (1 << 14);
 
-		HAL_RCC_GetHCLKFreq();
-		
-		//SET THE BAUD RATE TO 115200 BITS/SECOND
-		USART3->BRR |= ((1 << 0) | (1 << 2) | (1 << 6));
+	HAL_RCC_GetHCLKFreq();
 	
-		//ENABLE THE receive register not empty interrupt
-		USART3->CR1 |= (1 << 5);
-		NVIC_EnableIRQ(USART3_4_IRQn);
+	// SET THE BAUD RATE TO 115200 BITS/SECOND
+	USART3 -> BRR |= ((1 << 0) | (1 << 2) | (1 << 6));
+
+	// ENABLE THE receive register not empty interrupt
+	USART3 -> CR1 |= (1 << 5);
+	NVIC_EnableIRQ(USART3_4_IRQn);
+		
+		
+		
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-			//Read_data is STARTMOTOR Signal
-			if(read_data == 0x44){
-				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
-				TransmitChar(0xFF);				
-			}
-			
-			//Read_data is ACK signal
-			if(read_data == 0xFF){
-				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
-				read_data = 0;
-			}
+  while (1){
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+		HAL_Delay(100);
 		
-		
+		TransmitToBottomBoard();
   }
 }
 
@@ -184,26 +184,25 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
-  while (1)
-  {
-  }
+  while (1){}
+		
   /* USER CODE END Error_Handler_Debug */
 }
 
 void TransmitChar (char x){
 	while((USART3->ISR & (1 << 7)) == 0){
-		//do nothing while data is not transferred to the shift register
+		// Do nothing while data is not transferred to the shift register
 	}
 	
 	USART3->TDR = x;
-	//return;
 }
 
 void TransmitString (char* x){
 	char* p = x;
+	
 	while(*p != 0){
 		TransmitChar(*p);
-		p +=1;
+		p += 1;
 	}
 		return;
 }
@@ -214,8 +213,31 @@ void USART3_4_IRQHandler(void){
 		read_data = USART3->RDR;
 	
 		//Reset Flags- IMPORTANT
-		USART3->ISR &= ~(1<<5);//RXNE
-		USART3->ISR &= ~(1<<3);//ORE
+		USART3 -> ISR &= ~(1<<5);//RXNE
+		USART3 -> ISR &= ~(1<<3);//ORE
+}
+
+void TransmitToBottomBoard(void){
+	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
+	HAL_Delay(100);
+	
+	/* MESSAGE FROM TOP BOARD TO BOTTOM BOARD */
+	TransmitChar(START_MOTOR);
+}
+
+void ReceiveFromBottomBoard(){
+	
+	// Read_data is STARTMOTOR Signal
+	if(read_data == 0x44){
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+		// TransmitChar(0xFF);				
+	}
+	
+	// Read_data is ACK signal
+	if(read_data == 0xFF){
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
+		read_data = 0;
+	}
 }
 
 #ifdef  USE_FULL_ASSERT

@@ -113,24 +113,26 @@ int main(void)
 	HAL_GPIO_Init(GPIOB, &initStr1);
 	
 	// SETS ALTERNATE FUCTION 4 FOR PINS PB10 AND PB11
-	GPIOB->AFR[1] |= (1 << 10);
-	GPIOB->AFR[1] |= (1 << 14);
+	GPIOB -> AFR[1] |= (1 << 10);
+	GPIOB -> AFR[1] |= (1 << 14);
 
 	HAL_RCC_GetHCLKFreq();
 	
 	// SET THE BAUD RATE TO 115200 BITS/SECOND
 	USART3 -> BRR |= ((1 << 0) | (1 << 2) | (1 << 6));
-
-	// ENABLE THE receive register not empty interrupt
+	USART3 -> CR1 |= 1;														 
+	USART3 -> CR1 |= (1 << 2);
+	USART3 -> CR1 |= (1 << 3);
+	// ENABLE THE receive register not empty interrupt													
 	USART3 -> CR1 |= (1 << 5);
 	NVIC_EnableIRQ(USART3_4_IRQn);
-		
+	// NVIC_SetPriority(USART3_4_IRQn, 1);
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN WHILE */
   while (1){
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
-		HAL_Delay(100);
+	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
+//		HAL_Delay(100);
   }
 }
 
@@ -208,11 +210,11 @@ void TransmitString (char* x){
 void USART3_4_IRQHandler(void){
 		read_data = USART3 -> RDR;
 	
+		ReceiveFromTopBoard();
+	
 		// Reset Flags - IMPORTANT
 		USART3 -> ISR &= ~(1<<5); //RXNE Register
 		USART3 -> ISR &= ~(1<<3); //ORE Register
-	
-		ReceiveFromTopBoard();
 }
 
 void TransmitToTopBoard(void){
@@ -221,17 +223,17 @@ void TransmitToTopBoard(void){
 
 void ReceiveFromTopBoard(void){
 	// Read_data is STARTMOTOR Signal
-	if(read_data == 0x44){
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_7);
-		HAL_Delay(100);
-		TransmitChar(0xFF);				
+	if(read_data == 'S'){
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
+		// HAL_Delay(100);
+		TransmitChar('A');				
 	}
 	
-	// Read_data is ACK signal
-	if(read_data == 0xFF){
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
-		read_data = 0;
-	}
+//	// Read_data is ACK signal
+//	if(read_data == 0xFF){
+//		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
+//		read_data = 0;
+//	}
 }
 
 

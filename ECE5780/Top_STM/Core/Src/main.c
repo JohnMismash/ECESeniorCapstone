@@ -50,7 +50,7 @@ V2
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 volatile uint8_t read_data;
-char START_MOTOR = 0x44;
+char* START_MOTOR = "0x44";
 
 /* USER CODE END PV */
 
@@ -80,9 +80,10 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-		__HAL_RCC_GPIOB_CLK_ENABLE();
-		__HAL_RCC_USART3_CLK_ENABLE();
-		__HAL_RCC_GPIOC_CLK_ENABLE();
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+	__HAL_RCC_USART3_CLK_ENABLE();
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+	
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -98,15 +99,15 @@ int main(void)
 	
 	//INITIALIZE THE TX LINE
 	GPIO_InitTypeDef initStr = {GPIO_PIN_10,
-	GPIO_MODE_AF_PP,
-	GPIO_SPEED_FREQ_LOW,
-	GPIO_NOPULL};
+															GPIO_MODE_AF_PP,
+															GPIO_SPEED_FREQ_LOW,
+															GPIO_NOPULL};
 	
 	//THIS IS THE RX LINE
 	GPIO_InitTypeDef initStr1 = {GPIO_PIN_11,
-	GPIO_MODE_AF_PP,
-	GPIO_SPEED_FREQ_LOW,
-	GPIO_PULLUP};
+															 GPIO_MODE_AF_PP,
+															 GPIO_SPEED_FREQ_LOW,
+															 GPIO_PULLUP};
 	
 	HAL_GPIO_Init(GPIOB, &initStr);
 	HAL_GPIO_Init(GPIOB, &initStr1);
@@ -119,21 +120,25 @@ int main(void)
 	
 	// SET THE BAUD RATE TO 115200 BITS/SECOND
 	USART3 -> BRR |= ((1 << 0) | (1 << 2) | (1 << 6));
+	// USART3 -> BRR = 833;
+	USART3 -> CR1 |= 1;
+	USART3 -> CR1 |= (1 << 2);
+	USART3 -> CR1 |= (1 << 3);														 
 
 	// ENABLE THE receive register not empty interrupt
 	USART3 -> CR1 |= (1 << 5);
 	NVIC_EnableIRQ(USART3_4_IRQn);
-		
-		
+															 
+	TransmitToBottomBoard();														 
 		
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN WHILE */
   while (1){
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
-		HAL_Delay(100);
+//		HAL_Delay(100);
 		
-		TransmitToBottomBoard();
+		
   }
 }
 
@@ -210,32 +215,33 @@ void TransmitString (char* x){
 
 void USART3_4_IRQHandler(void){
 	
-		read_data = USART3->RDR;
+		read_data = USART3 -> RDR;
+	
+		ReceiveFromBottomBoard();
 	
 		//Reset Flags- IMPORTANT
 		USART3 -> ISR &= ~(1<<5);//RXNE
 		USART3 -> ISR &= ~(1<<3);//ORE
+	
 }
 
 void TransmitToBottomBoard(void){
-	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
-	HAL_Delay(100);
 	
 	/* MESSAGE FROM TOP BOARD TO BOTTOM BOARD */
-	TransmitChar(START_MOTOR);
+	TransmitChar('S');
 }
 
 void ReceiveFromBottomBoard(){
 	
-	// Read_data is STARTMOTOR Signal
-	if(read_data == 0x44){
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
-		// TransmitChar(0xFF);				
-	}
+//	// Read_data is STARTMOTOR Signal
+//	if(read_data == 'S'){
+//		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+//		TransmitChar(0xFF);				
+//	}
 	
 	// Read_data is ACK signal
-	if(read_data == 0xFF){
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
+	if(read_data == 'A'){
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
 		read_data = 0;
 	}
 }

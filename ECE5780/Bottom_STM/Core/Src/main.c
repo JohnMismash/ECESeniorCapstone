@@ -41,9 +41,9 @@ V2
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define STARTMOTOR 0x44;
+#define STARTMOTOR 'S';
 #define STOPMOTOR  0x55;
-#define ACK				 0xFF;
+#define ACK				 'A';
 
 /* USER CODE END PM */
 
@@ -51,6 +51,7 @@ V2
 
 /* USER CODE BEGIN PV */
 volatile uint8_t read_data;
+char START_MOTOR = 'S';
 	
 /* USER CODE END PV */
 
@@ -60,12 +61,12 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 void TransmitChar (char x);
 void TransmitString (char* x);
-void TransmitToTopBoard(void);
+void TransmitToTopBoard(char message);
 void ReceiveFromTopBoard(void);
 
 /* USER CODE END PFP */
-
 /* Private user code ---------------------------------------------------------*/
+
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
@@ -83,12 +84,13 @@ int main(void)
 	__HAL_RCC_GPIOB_CLK_ENABLE();
 	__HAL_RCC_USART3_CLK_ENABLE();
 	__HAL_RCC_GPIOC_CLK_ENABLE();
+	
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  /* USER CODE BEGIN 2 */
 	
-	//Initialize LED PINS
+  /* USER CODE BEGIN 2 */
+	// INIT LED PINS.
 	GPIO_InitTypeDef initStrLED = {GPIO_PIN_6| GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
 																 GPIO_MODE_OUTPUT_PP,
 																 GPIO_SPEED_FREQ_LOW,
@@ -97,18 +99,19 @@ int main(void)
 	// Initialize pins PC6 & PC7 & PC8 & PC9.
 	HAL_GPIO_Init(GPIOC, &initStrLED); 
 
-	// INITIALIZE THE TX LINE
+	// INITIALIZE THE TX LINE.
 	GPIO_InitTypeDef initStr = {GPIO_PIN_10,
 														  GPIO_MODE_AF_PP,
 														  GPIO_SPEED_FREQ_LOW,
 														  GPIO_NOPULL};
 	
-	// INITIALIZE THE RX LINE
+	// INITIALIZE THE RX LINE.
 	GPIO_InitTypeDef initStr1 = {GPIO_PIN_11,
 															 GPIO_MODE_AF_PP,
 															 GPIO_SPEED_FREQ_LOW,
 															 GPIO_PULLUP};
 	
+	// INIT PIN 10 & 11.														 
 	HAL_GPIO_Init(GPIOB, &initStr);
 	HAL_GPIO_Init(GPIOB, &initStr1);
 	
@@ -116,23 +119,34 @@ int main(void)
 	GPIOB -> AFR[1] |= (1 << 10);
 	GPIOB -> AFR[1] |= (1 << 14);
 
+	// GET SYSTEM CLOCK FREQ.															
 	HAL_RCC_GetHCLKFreq();
 	
 	// SET THE BAUD RATE TO 115200 BITS/SECOND
 	USART3 -> BRR |= ((1 << 0) | (1 << 2) | (1 << 6));
-	USART3 -> CR1 |= 1;														 
+															 
+	// SETS THE USART ENABLE BIT 0 TO 1 (USART ENABLED).													 
+	USART3 -> CR1 |= 1;
+
+	// SET THE RECEIVER ENABLE BIT 2 TO 1 
+	// (Receiver is enabled and begins searching for a start bit).														 
 	USART3 -> CR1 |= (1 << 2);
+															 
+	// SET THE TRANMITTER ENABLE BIT 3 TO 1
+	// (Transmitter is enabled).
 	USART3 -> CR1 |= (1 << 3);
+															 
 	// ENABLE THE receive register not empty interrupt													
 	USART3 -> CR1 |= (1 << 5);
+	
+	// ENABLE THE USART PRIORITY IN THE NVIC.
 	NVIC_EnableIRQ(USART3_4_IRQn);
-	// NVIC_SetPriority(USART3_4_IRQn, 1);
+															 
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN WHILE */
   while (1){
-	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
-//		HAL_Delay(100);
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
   }
 }
 
@@ -188,14 +202,17 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
+/* Transmits a single character using USART communication. */
 void TransmitChar (char x){
-	while((USART3->ISR & (1 << 7)) == 0){
-		// Do nothing while data is not transferred to the shift register
+	while((USART3 -> ISR & (1 << 7)) == 0){
+		// DO NOTHING WHILE FOR USART STATUS FLAG TO SIGNAL IF TDR IS EMPTY.
 	}
 	
+	// WRITES THE CHAR INTO THE TDR (Transmit Data Register).
 	USART3 -> TDR = x;
 }
 
+/* Transmits a single string using USART communication. */
 void TransmitString (char* x){
 	char* p = x;
 	
@@ -208,32 +225,38 @@ void TransmitString (char* x){
 /* USER CODE END 4 */
 
 void USART3_4_IRQHandler(void){
-		read_data = USART3 -> RDR;
 	
-		ReceiveFromTopBoard();
+	// RECEIVE DATA WHEN INTERRUPT HANDLER IS TRIGGERED.
+	read_data = USART3 -> RDR;
 	
-		// Reset Flags - IMPORTANT
-		USART3 -> ISR &= ~(1<<5); //RXNE Register
-		USART3 -> ISR &= ~(1<<3); //ORE Register
+	// BEGIN ACKNOWLEDGEMENT.
+	ReceiveFromTopBoard();
+
+	// RESET FLAGS
+	USART3 -> ISR &= ~(1<<5); // RXNE REGISTER
+	USART3 -> ISR &= ~(1<<3); // ORE REGISTER
 }
 
-void TransmitToTopBoard(void){
+/* Transmits a message to the top board. */
+void TransmitToTopBoard(char message){
 	
+	/* MESSAGE FROM BOTTOM BOARD TO TOP BOARD. */
+	TransmitChar(message);
 }
 
+/* Receives a message from the top board. */
 void ReceiveFromTopBoard(void){
 	// Read_data is STARTMOTOR Signal
-	if(read_data == 'S'){
+	if(read_data == START_MOTOR){
 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
-		// HAL_Delay(100);
-		TransmitChar('A');				
+		TransmitToTopBoard('S');				
 	}
 	
-//	// Read_data is ACK signal
-//	if(read_data == 0xFF){
-//		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
-//		read_data = 0;
-//	}
+	// Read_data is ACK Signal
+	if(read_data == 'A'){
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
+		read_data = 0;
+	}
 }
 
 

@@ -50,7 +50,7 @@ V2
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 volatile uint8_t read_data;
-char* START_MOTOR = "0x44";
+char START_MOTOR = 'S';
 
 /* USER CODE END PV */
 
@@ -87,28 +87,30 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
+	
   /* USER CODE BEGIN 2 */
 	//Initialize LED PINS
 	GPIO_InitTypeDef initStrLED = {GPIO_PIN_6| GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
-	GPIO_MODE_OUTPUT_PP,
-	GPIO_SPEED_FREQ_LOW,
-	GPIO_NOPULL};
+																 GPIO_MODE_OUTPUT_PP,
+																 GPIO_SPEED_FREQ_LOW,
+																 GPIO_NOPULL};
 	
-	// Initialize pins PC8 & PC9 & PC6 * PC7
+	// INIT PINS PC8 & PC9 & PC6 * PC7
 	HAL_GPIO_Init(GPIOC, &initStrLED);
 	
-	//INITIALIZE THE TX LINE
+	// INITIALIZE THE TX LINE.
 	GPIO_InitTypeDef initStr = {GPIO_PIN_10,
 															GPIO_MODE_AF_PP,
 															GPIO_SPEED_FREQ_LOW,
 															GPIO_NOPULL};
 	
-	//THIS IS THE RX LINE
+	// THIS IS THE RX LINE.
 	GPIO_InitTypeDef initStr1 = {GPIO_PIN_11,
 															 GPIO_MODE_AF_PP,
 															 GPIO_SPEED_FREQ_LOW,
 															 GPIO_PULLUP};
 	
+	// INIT PIN 10 & 11.
 	HAL_GPIO_Init(GPIOB, &initStr);
 	HAL_GPIO_Init(GPIOB, &initStr1);
 	
@@ -120,13 +122,22 @@ int main(void)
 	
 	// SET THE BAUD RATE TO 115200 BITS/SECOND
 	USART3 -> BRR |= ((1 << 0) | (1 << 2) | (1 << 6));
-	// USART3 -> BRR = 833;
-	USART3 -> CR1 |= 1;
+															 
+	// SET THE RECEIVER ENABLE BIT 2 TO 1 
+	// (Receiver is enabled and begins searching for a start bit).														 
 	USART3 -> CR1 |= (1 << 2);
-	USART3 -> CR1 |= (1 << 3);														 
+															 
+	// SET THE TRANMITTER ENABLE BIT 3 TO 1
+	// (Transmitter is enabled).
+	USART3 -> CR1 |= (1 << 3);
+															 
+	// ENABLE THE receive register not empty interrupt													
+	USART3 -> CR1 |= (1 << 5);														 
 
 	// ENABLE THE receive register not empty interrupt
 	USART3 -> CR1 |= (1 << 5);
+	
+	// ENABLE THE USART PRIORITY IN THE NVIC.
 	NVIC_EnableIRQ(USART3_4_IRQn);
 															 
 	TransmitToBottomBoard();														 
@@ -136,9 +147,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1){
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
-//		HAL_Delay(100);
-		
-		
   }
 }
 
@@ -194,6 +202,7 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
+/* Transmits a single character using USART communication. */
 void TransmitChar (char x){
 	while((USART3->ISR & (1 << 7)) == 0){
 		// Do nothing while data is not transferred to the shift register
@@ -202,6 +211,7 @@ void TransmitChar (char x){
 	USART3->TDR = x;
 }
 
+/* Transmits a single string using USART communication. */
 void TransmitString (char* x){
 	char* p = x;
 	
@@ -215,31 +225,35 @@ void TransmitString (char* x){
 
 void USART3_4_IRQHandler(void){
 	
-		read_data = USART3 -> RDR;
-	
-		ReceiveFromBottomBoard();
-	
-		//Reset Flags- IMPORTANT
-		USART3 -> ISR &= ~(1<<5);//RXNE
-		USART3 -> ISR &= ~(1<<3);//ORE
+	// RECEIVE DATA WHEN INTERRUPT HANDLER IS TRIGGERED.
+	read_data = USART3 -> RDR;
+
+	// BEGIN ACKNOWLEDGEMENT.
+	ReceiveFromBottomBoard();
+
+	// RESET FLAGS
+	USART3 -> ISR &= ~(1<<5);// RXNE REGISTER
+	USART3 -> ISR &= ~(1<<3);// ORE REGISTER
 	
 }
 
+/* Transmits a message to the bottom board. */
 void TransmitToBottomBoard(void){
 	
 	/* MESSAGE FROM TOP BOARD TO BOTTOM BOARD */
-	TransmitChar('S');
+	TransmitChar(START_MOTOR);
 }
 
+/* Receives a message from the bottom board. */
 void ReceiveFromBottomBoard(){
 	
-//	// Read_data is STARTMOTOR Signal
-//	if(read_data == 'S'){
-//		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
-//		TransmitChar(0xFF);				
-//	}
+	// Read_data is STARTMOTOR Signal
+	if(read_data == START_MOTOR){
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+		TransmitChar(0xFF);				
+	}
 	
-	// Read_data is ACK signal
+	// Read_data is ACK Signal
 	if(read_data == 'A'){
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
 		read_data = 0;

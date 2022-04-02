@@ -131,7 +131,7 @@ int main(void)
 	// (Transmitter is enabled).
 	USART3 -> CR1 |= (1 << 3);
 															 
-	// ENABLE THE receive register not empty interrupt													
+	// ENABLE THE Receive Register Not Empty Interrupt (RNE)	.											
 	USART3 -> CR1 |= (1 << 5);														 
 
 	// ENABLE THE receive register not empty interrupt

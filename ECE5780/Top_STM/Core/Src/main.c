@@ -189,7 +189,7 @@ int main(void)
       GPIOC->ODR |= (1<<8);  //orange
       GPIOC->ODR |= (1<<9);  //green
        
-	  READY_TO_GO = 0;
+	    READY_TO_GO = 0;
       TransmitToBottomBoard();  
     }
 
@@ -288,6 +288,7 @@ void TransmitToBottomBoard(void){
 	
 	/* MESSAGE FROM TOP BOARD TO BOTTOM BOARD */
 	TransmitChar(START_MOTOR);
+  //TransmitChar('s');
 }
 
 /* Receives a message from the bottom board. */
@@ -310,6 +311,9 @@ void ReceiveFromBottomBoard(){
 //This does all the setup for the Analog to Digital converter that is used for the distance sensor
 void setupDistanceSensor(){
 
+  // Red wire is 5 volts
+  // Black wire is ground
+  // White wire is analog out
   RCC->AHBENR |=  RCC_AHBENR_GPIOCEN;
 
   //USE PC0
@@ -357,8 +361,6 @@ void setupDistanceSensor(){
 
   }
   
-
-
   //Follow this procedure to enable the ADC:
   // 1. Clear the ADRDY bit in ADC_ISR register by programming this bit to 1.
   // 2. Set ADEN=1 in the ADC_CR register.

@@ -128,16 +128,13 @@ int main(void)
 	// SETS THE USART ENABLE BIT 0 TO 1 (USART ENABLED).													 
 	USART3 -> CR1 |= 1;
 
-	// SET THE RECEIVER ENABLE BIT 2 TO 1 
-	// (Receiver is enabled and begins searching for a start bit).														 
-	USART3 -> CR1 |= (1 << 2);
-															 
-	// SET THE TRANMITTER ENABLE BIT 3 TO 1
-	// (Transmitter is enabled).
-	USART3 -> CR1 |= (1 << 3);
-															 
-	// ENABLE THE receive register not empty interrupt													
-	USART3 -> CR1 |= (1 << 5);
+    //set the enables on TX, Rx, then enable USART fully
+    USART3->CR1 |= (1 << 3); //te
+    USART3->CR1 |= (1 << 2); //re
+    USART3->CR1 |= (1 << 0); //ue
+
+    // ENABLE THE Receive Register Not Empty Interrupt (RNE)	.
+      USART3 -> CR1 |= (1 << 5);
 	
 	// ENABLE THE USART PRIORITY IN THE NVIC.
 	NVIC_EnableIRQ(USART3_4_IRQn);

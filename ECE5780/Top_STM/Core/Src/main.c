@@ -141,19 +141,15 @@ int main(void)
 	// SET THE BAUD RATE TO 115200 BITS/SECOND
 	USART3 -> BRR |= ((1 << 0) | (1 << 2) | (1 << 6));
 															 
-	// SET THE RECEIVER ENABLE BIT 2 TO 1 
-	// (Receiver is enabled and begins searching for a start bit).														 
-	USART3 -> CR1 |= (1 << 2);
-															 
-	// SET THE TRANMITTER ENABLE BIT 3 TO 1
-	// (Transmitter is enabled).
-	USART3 -> CR1 |= (1 << 3);
-															 
-	// ENABLE THE Receive Register Not Empty Interrupt (RNE)	.											
-	USART3 -> CR1 |= (1 << 5);														 
 
-	// ENABLE THE receive register not empty interrupt
-	USART3 -> CR1 |= (1 << 5);
+  //set the enables on TX, Rx, then enable USART fully
+  USART3->CR1 |= (1 << 3); //te
+  USART3->CR1 |= (1 << 2); //re
+  USART3->CR1 |= (1 << 0); //ue			
+
+  // ENABLE THE Receive Register Not Empty Interrupt (RNE)	.											
+	USART3 -> CR1 |= (1 << 5);						 
+
 	
 	// ENABLE THE USART PRIORITY IN THE NVIC.
 	NVIC_EnableIRQ(USART3_4_IRQn);

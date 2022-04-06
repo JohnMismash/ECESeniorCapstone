@@ -1,14 +1,22 @@
 /* USER CODE BEGIN Header */
-/** This is actually our final project code
+/** ECE 3992/4710 FINAL PROJECT CODE
 
+PIN ASSIGNMENT:
+PB10/PB11 - USART Interface
+PB0 - Limit Switch Signal Pin
+PC6-9 - LED Pins
 
 V1 Implementation of Inter-board communication via UART.  Boards will speak to each other
 		Testing will involve pressing a button to signal another STM board to turn on an LED
-V2
+
+V2 Implementing Limit Switch to reset LED signal after USART connection is made.
+
+
   ******************************************************************************
   * @file           : main.c
   * @brief          : Main program body
 	* @author					: John (Jack) Mismash, u1179865 - University of Utah - ECE 5780
+	*										Tony Robinson, u - University of Utah - ECE 5780
   ******************************************************************************
   * @attention
   *

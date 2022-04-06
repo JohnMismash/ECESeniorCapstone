@@ -1,14 +1,24 @@
 /* USER CODE BEGIN Header */
-/** This is actually our final project code
+/** ECE 3992/4710 FINAL PROJECT CODE
 
+PIN ASSIGNMENT:
+PB10/PB11 - USART Interface
+PB0 - Limit Switch Signal Pin
+PC6-9 - LED Pins
 
-V1 Implementation of Inter-board communication via UART.  Boards will speak to each other
+V1 Implementation of Inter-board communication via USART.  Boards will speak to each other
 		Testing will involve pressing a button to signal another STM board to turn on an LED
-V2
+
+V2 Implementing Limit Switch to reset LED signal after USART connection is made.
+
+	
+
   ******************************************************************************
   * @file           : main.c
   * @brief          : Main program body
-	* @author					: John (Jack) Mismash, u1179865 - University of Utah - ECE 5780
+	* @authors				: John (Jack) Mismash, u1179865 - University of Utah - ECE 5780
+	*										Andrew Porter, u1071655 - University of Utah - ECE 5780
+	*										Tony Robinson, u - University of Utah - ECE 5780
   ******************************************************************************
   * @attention
   *
@@ -63,8 +73,9 @@ void TransmitChar (char x);
 void TransmitString (char* x);
 void TransmitToTopBoard(char message);
 void ReceiveFromTopBoard(void);
-void LED_Init();
-void USART_Init();
+void LED_Init(void);
+void USART_Init(void);
+void LimitSwitch_Init(void);
 
 /* USER CODE END PFP */
 /* Private user code ---------------------------------------------------------*/
@@ -89,8 +100,11 @@ int main(void)
   /* Initialize all configured peripherals */
 	
   /* USER CODE BEGIN 2 */
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+	
 	LED_Init();
 	USART_Init();
+	LimitSwitch_Init();
 															 
   /* USER CODE END 2 */
 
@@ -100,7 +114,7 @@ int main(void)
   }
 }
 
-void LED_Init(){
+void LED_Init(void){
 	__HAL_RCC_GPIOC_CLK_ENABLE();
 
 	// INIT LED PINS.
@@ -113,11 +127,10 @@ void LED_Init(){
 	HAL_GPIO_Init(GPIOC, &initStrLED); 
 }
 
-void USART_Init(){
-	__HAL_RCC_GPIOB_CLK_ENABLE();
+void USART_Init(void){
 	__HAL_RCC_USART3_CLK_ENABLE();
 	
-		// INITIALIZE THE TX LINE.
+	// INITIALIZE THE TX LINE.
 	GPIO_InitTypeDef initStr = {GPIO_PIN_10,
 														  GPIO_MODE_AF_PP,
 														  GPIO_SPEED_FREQ_LOW,
@@ -158,6 +171,31 @@ void USART_Init(){
 	
 	// ENABLE THE USART PRIORITY IN THE NVIC.
 	NVIC_EnableIRQ(USART3_4_IRQn);
+}
+
+void LimitSwitch_Init(void){
+	// INIT PIN PB0 TO INPUT MODE.
+	GPIO_InitTypeDef initStr = {GPIO_PIN_0,
+														  GPIO_MODE_INPUT,
+														  GPIO_SPEED_FREQ_LOW,
+														  GPIO_PULLDOWN};
+	// INIT PB0.
+	HAL_GPIO_Init(GPIOB, &initStr);	
+
+	// ENABLES RISING TRIGGER EVENT FOR PB0.														
+	EXTI -> RTSR |= (1 << 0);														
+	
+	// CREATE AS A INTERRUPT SIGNAL, NOT EVENT SIGNAL.														
+	EXTI -> IMR |= (1 << 0);
+
+	// USE THE RCC TO ENABLE THE SYSCFG PERIPHERAL CLK														
+	__HAL_RCC_SYSCFG_CLK_ENABLE();
+
+	// ROUTE PB0 TO THE EXTI INPUT LINE 0 (EXTI0).														
+	SYSCFG -> EXTICR[0] = 1;
+
+	// ENABLE THE EXTI INTERRUPT.														
+	NVIC_EnableIRQ(EXTI0_1_IRQn);															
 }
 
 /**
@@ -247,6 +285,11 @@ void USART3_4_IRQHandler(void){
 	USART3 -> ISR &= ~(1<<3); // ORE REGISTER
 }
 
+void EXTI0_1_IRQHandler(void){
+	// TODO! :)
+	
+}
+
 /* Transmits a message to the top board. */
 void TransmitToTopBoard(char message){
 	
@@ -268,7 +311,6 @@ void ReceiveFromTopBoard(void){
 		read_data = 0;
 	}
 }
-
 
 
 #ifdef  USE_FULL_ASSERT

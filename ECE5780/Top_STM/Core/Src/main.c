@@ -3,21 +3,37 @@
 
 PIN ASSIGNMENT:
 PB10/PB11 - USART Interface
-PB0 - Limit Switch Signal Pin
 PC6-9 - LED Pins
 PC0 - Distance Sensor (White Wire)
+
+
+
+HOW	TO WIRE THE UART CONNECTION --------------------------------------------
+1. Ground on top board goes to ground on bottom board
+2. PB10 on top board goes to PB11 on bottom board
+3. PB11 on top board goes to PB10 on bottom board
+----------------------------------------------------------------------------
+
+HOW	TO WIRE THE DISTANCE SENSOR --------------------------------------------
+1. Red wire goes to 5 volts on the board
+2. Black wire goes to ground on the board
+3. White wire goes to PC0 on the board
+----------------------------------------------------------------------------
+
+
 
 V1 Implementation of Inter-board communication via UART.  Boards will speak to each other
 		Testing will involve pressing a button to signal another STM board to turn on an LED
 
-V2 Implementing Limit Switch to reset LED signal after USART connection is made.
 
 
   ******************************************************************************
   * @file           : main.c
-  * @brief          : Main program body
-	* @author					: John (Jack) Mismash, u1179865 - University of Utah - ECE 5780
-	*										Tony Robinson, u - University of Utah - ECE 5780
+  * @brief          : Main program body for the TOP microcontroller
+	* @authors				: John (Jack) Mismash, u1179865 - University of Utah - ECE 5780
+	*						  Andrew Porter, u1071655 - University of Utah - ECE 5780
+	*						  Tony Robinson, u0531330 - University of Utah - ECE 5780
+	*						  Lindsey Enders, u1250233 - University of Utah - ECE 5780
   ******************************************************************************
   * @attention
   *
@@ -52,13 +68,12 @@ V2 Implementing Limit Switch to reset LED signal after USART connection is made.
 /* USER CODE BEGIN PM */
 #define STARTMOTOR 0x44;
 #define STOPMOTOR  0x55;
-#define ACK				 0xFF;
 
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-volatile uint8_t read_data;
+
 char START_MOTOR = 'S';
 
 /* USER CODE END PV */
@@ -67,14 +82,13 @@ char START_MOTOR = 'S';
 void SystemClock_Config(void);
 
 /* USER CODE BEGIN PFP */
-void TransmitChar (char x);
-void TransmitString (char* x);
+void TransmitChar (char );
+void TransmitString (char* );
 void TransmitToBottomBoard(void);
-void ReceiveFromBottomBoard(void);
+void ReceiveFromBottomBoard(uint8_t );
 void LED_Init(void);
 void USART_Init(void);
 void DistanceSensor_Init(void);
-void LimitSwitch_Init(void);
 
 int READY_TO_GO;
 	
@@ -103,7 +117,6 @@ int main(void)
   /* Initialize all configured peripherals */
 	LED_Init();
 	USART_Init();
-	LimitSwitch_Init();
 	DistanceSensor_Init(); // PC0
 
   /* USER CODE BEGIN 2 */
@@ -115,6 +128,7 @@ int main(void)
   int count = 0;
   READY_TO_GO = 1;
   
+
   while (1){
 
    //range on readVal is aprox between 500 and 3000
@@ -138,6 +152,7 @@ int main(void)
       GPIOC->ODR |= (1<<9);  //green
        
 	    READY_TO_GO = 0;
+
       TransmitToBottomBoard();  
     }
   }
@@ -270,9 +285,6 @@ void DistanceSensor_Init(void){
   
 }
 
-void LimitSwitch_Init(void){
-	
-}
 
 /**
   * @brief System Clock Configuration
@@ -350,10 +362,10 @@ void TransmitString (char* x){
 void USART3_4_IRQHandler(void){
 	
 	// RECEIVE DATA WHEN INTERRUPT HANDLER IS TRIGGERED.
-	read_data = USART3 -> RDR;
+	uint8_t read_data = USART3 -> RDR;
 
 	// BEGIN ACKNOWLEDGEMENT.
-	ReceiveFromBottomBoard();
+	ReceiveFromBottomBoard(read_data);
 
 	// RESET FLAGS
 	USART3 -> ISR &= ~(1<<5);// RXNE REGISTER
@@ -370,19 +382,15 @@ void TransmitToBottomBoard(void){
 }
 
 /* Receives a message from the bottom board. */
-void ReceiveFromBottomBoard(){
+void ReceiveFromBottomBoard(uint8_t read_data){
 	
 	// Read_data is STARTMOTOR Signal
 	if(read_data == START_MOTOR){
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
-		TransmitChar(0xFF);				
+		//TransmitChar(0xFF);				
 	}
 	
-	// Read_data is ACK Signal
-	if(read_data == 'A'){
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
-		read_data = 0;
-	}
+	
 }
 
 

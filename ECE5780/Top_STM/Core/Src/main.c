@@ -62,7 +62,10 @@ void TransmitChar (char x);
 void TransmitString (char* x);
 void TransmitToBottomBoard(void);
 void ReceiveFromBottomBoard(void);
-void setupDistanceSensor();
+void LED_Init(void);
+void USART_Init(void);
+void DistanceSensor_Init(void);
+void LimitSwitch_Init(void);
 
 int READY_TO_GO;
 	
@@ -85,37 +88,66 @@ int main(void)
   /* USER CODE BEGIN SysInit */
 	__HAL_RCC_GPIOB_CLK_ENABLE();
 	__HAL_RCC_USART3_CLK_ENABLE();
-	__HAL_RCC_GPIOC_CLK_ENABLE();
 	
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-	
-
-  //enable LEDs
-  RCC->AHBENR |=  RCC_AHBENR_GPIOCEN;
-  GPIOC->MODER |= (1 << 12);   //red
-  GPIOC->MODER |= (1 << 14);   //blue
-  GPIOC->MODER |= (1 << 16);   //green
-  GPIOC->MODER |= (1 << 18);   //orange
-
-
-  // set up the ADC for the sensor
-  //The Sensor uses PC0 for input
-  setupDistanceSensor();
-
-
+	LED_Init();
+	USART_Init();
+	LimitSwitch_Init();
+	DistanceSensor_Init(); // PC0
 
   /* USER CODE BEGIN 2 */
-	//Initialize LED PINS
+		
+  /* USER CODE END 2 */
+
+  /* USER CODE BEGIN WHILE */
+  int readVal;
+  int count = 0;
+  READY_TO_GO = 1;
+  
+  while (1){
+
+   //range on readVal is aprox between 500 and 3000
+		readVal = ADC1->DR; 
+		if(readVal > 2000){
+      count++;
+    }
+		else{
+      GPIOC->ODR &= ~(1<<6);  //red
+      GPIOC->ODR &= ~(1<<7);  //blue
+      GPIOC->ODR &= ~(1<<8);  //orange
+      GPIOC->ODR &= ~(1<<9);  //green
+      count=0;
+   }
+
+    // If we get to this, we have had success and the sensor has picked up the package. So next step
+    if( (count>100) && READY_TO_GO){
+      GPIOC->ODR |= (1<<6);  //red
+      GPIOC->ODR |= (1<<7);  //blue
+      GPIOC->ODR |= (1<<8);  //orange
+      GPIOC->ODR |= (1<<9);  //green
+       
+	    READY_TO_GO = 0;
+      TransmitToBottomBoard();  
+    }
+  }
+}
+
+void LED_Init(void){
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+
+	// INIT LED PINS
 	GPIO_InitTypeDef initStrLED = {GPIO_PIN_6| GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
 																 GPIO_MODE_OUTPUT_PP,
 																 GPIO_SPEED_FREQ_LOW,
 																 GPIO_NOPULL};
 	
-	// INIT PINS PC8 & PC9 & PC6 * PC7
+	// INIT PINS PC8, PC9, PC6 AND PC7
 	HAL_GPIO_Init(GPIOC, &initStrLED);
-	
+}
+
+void USART_Init(void){
 	// INITIALIZE THE TX LINE.
 	GPIO_InitTypeDef initStr = {GPIO_PIN_10,
 															GPIO_MODE_AF_PP,
@@ -152,44 +184,85 @@ int main(void)
 
 	
 	// ENABLE THE USART PRIORITY IN THE NVIC.
-	NVIC_EnableIRQ(USART3_4_IRQn);
-															 
-															 
-		
-  /* USER CODE END 2 */
+	NVIC_EnableIRQ(USART3_4_IRQn);																													
+}
 
-  /* USER CODE BEGIN WHILE */
-  int readVal;
-  int count = 0;
-  READY_TO_GO = 1;
+//This does all the setup for the Analog to Digital converter that is used for the distance sensor
+void DistanceSensor_Init(void){
+
+  // Red wire is 5 volts
+  // Black wire is ground
+  // White wire is analog out
+  RCC->AHBENR |=  RCC_AHBENR_GPIOCEN;
+
+  //USE PC0
+  //This is for enabling PC0
+  GPIOC->MODER |= (0x3<<0);   // 11 in bit positions 1 and 0
+  GPIOC->PUPDR &= ~(0x3<<0); 
+
+  //Enable the ADC1 in the RCC peripheral.
+  RCC->APB2ENR |= RCC_APB2ENR_ADCEN;
+
+  //Configure the ADC to 8-bit resolution, continuous conversion mode, hardware triggers disabled (software trigger only).
+  ADC1->CFGR1 &= ~(0x3<<3);  //8 bits
+  ADC1->CFGR1 |= (0x1<<4);   //8 bits
+  ADC1->CFGR1 |= (0x1<<13);   //continuous conversion mode
+  ADC1->CFGR1 &= ~(0x3<<3) ; //hardware triggers disabled (software trigger only)
+
+  //Select/enable the input pin’s channel for ADC conversion.
+  ADC1->CHSELR |= (1<<10);  // ADC_IN10 correlates to PC0   Search ADC_IN10 in the lab manual
   
-  while (1){
 
-    //range on readVal is aprox between 500 and 3000
-	readVal = ADC1->DR; 
-    if(readVal > 2000){
-      count++;
-    }
-    else{
-      GPIOC->ODR &= ~(1<<6);  //red
-      GPIOC->ODR &= ~(1<<7);  //blue
-      GPIOC->ODR &= ~(1<<8);  //orange
-      GPIOC->ODR &= ~(1<<9);  //green
-      count=0;
-    }
+  //Perform a self-calibration, enable, and start the ADC.
 
-    // If we get to this, we have had success and the sensor has picked up the package. So next step
-    if( (count>100) && READY_TO_GO){
-      GPIOC->ODR |= (1<<6);  //red
-      GPIOC->ODR |= (1<<7);  //blue
-      GPIOC->ODR |= (1<<8);  //orange
-      GPIOC->ODR |= (1<<9);  //green
-       
-	    READY_TO_GO = 0;
-      TransmitToBottomBoard();  
-    }
+  //Calibration software procedure
+  //1. Ensure that ADEN=0 and DMAEN=0 
+  //2. Set ADCAL=1
+  //3. Wait until ADCAL=0
+  //4. The calibration factor can be read from bits 6:0 of ADC_DR.
+  
+  //1
+  if ( ((ADC1->CR & 0x1) >> 0) != 0){
+    //ERROR
+    GPIOC->ODR |= (1<<6);
+  }
+
+  if ( ((ADC1->CFGR1 & 0x1) >> 0) != 0){
+    //ERROR
+    GPIOC->ODR |= (1<<6);
+  }
+  
+  //2
+  ADC1->CR |= (0x1 << 31);
+
+  //3
+  while(((ADC1->CR & 0x80000000) >> 30) != 0){
 
   }
+  
+  //Follow this procedure to enable the ADC:
+  // 1. Clear the ADRDY bit in ADC_ISR register by programming this bit to 1.
+  // 2. Set ADEN=1 in the ADC_CR register.
+  // 3. Wait until ADRDY=1 in the ADC_ISR register and continue to write ADEN=1 (ADRDY is set after the ADC startup time). 
+  //    This can be handled by interrupt if the interrupt is enabled by setting the ADRDYIE bit in the ADC_IER register.
+  
+  //1
+  ADC1->ISR |= (0x1 << 0);
+
+  //2
+  ADC1->CR |= (0x1<<0);  //enable
+
+  //3
+  if ( ((ADC1->ISR & 0x1) >> 0) != 1){
+
+  }
+
+  ADC1->CR |= (0x1<<2);  //start
+  
+}
+
+void LimitSwitch_Init(void){
+	
 }
 
 /**
@@ -303,80 +376,6 @@ void ReceiveFromBottomBoard(){
 	}
 }
 
-
-//This does all the setup for the Analog to Digital converter that is used for the distance sensor
-void setupDistanceSensor(){
-
-  // Red wire is 5 volts
-  // Black wire is ground
-  // White wire is analog out
-  RCC->AHBENR |=  RCC_AHBENR_GPIOCEN;
-
-  //USE PC0
-  //This is for enabling PC0
-  GPIOC->MODER |= (0x3<<0);   // 11 in bit positions 1 and 0
-  GPIOC->PUPDR &= ~(0x3<<0); 
-
-  //Enable the ADC1 in the RCC peripheral.
-  RCC->APB2ENR |= RCC_APB2ENR_ADCEN;
-
-  //Configure the ADC to 8-bit resolution, continuous conversion mode, hardware triggers disabled (software trigger only).
-  ADC1->CFGR1 &= ~(0x3<<3);  //8 bits
-  ADC1->CFGR1 |= (0x1<<4);   //8 bits
-  ADC1->CFGR1 |= (0x1<<13);   //continuous conversion mode
-  ADC1->CFGR1 &= ~(0x3<<3) ; //hardware triggers disabled (software trigger only)
-
-  //Select/enable the input pin’s channel for ADC conversion.
-  ADC1->CHSELR |= (1<<10);  // ADC_IN10 correlates to PC0   Search ADC_IN10 in the lab manual
-  
-
-  //Perform a self-calibration, enable, and start the ADC.
-
-  //Calibration software procedure
-  //1. Ensure that ADEN=0 and DMAEN=0 
-  //2. Set ADCAL=1
-  //3. Wait until ADCAL=0
-  //4. The calibration factor can be read from bits 6:0 of ADC_DR.
-  
-  //1
-  if ( ((ADC1->CR & 0x1) >> 0) != 0){
-    //ERROR
-    GPIOC->ODR |= (1<<6);
-  }
-
-  if ( ((ADC1->CFGR1 & 0x1) >> 0) != 0){
-    //ERROR
-    GPIOC->ODR |= (1<<6);
-  }
-  
-  //2
-  ADC1->CR |= (0x1 << 31);
-
-  //3
-  while(((ADC1->CR & 0x80000000) >> 30) != 0){
-
-  }
-  
-  //Follow this procedure to enable the ADC:
-  // 1. Clear the ADRDY bit in ADC_ISR register by programming this bit to 1.
-  // 2. Set ADEN=1 in the ADC_CR register.
-  // 3. Wait until ADRDY=1 in the ADC_ISR register and continue to write ADEN=1 (ADRDY is set after the ADC startup time). 
-  //    This can be handled by interrupt if the interrupt is enabled by setting the ADRDYIE bit in the ADC_IER register.
-  
-  //1
-  ADC1->ISR |= (0x1 << 0);
-
-  //2
-  ADC1->CR |= (0x1<<0);  //enable
-
-  //3
-  if ( ((ADC1->ISR & 0x1) >> 0) != 1){
-
-  }
-
-  ADC1->CR |= (0x1<<2);  //start
-  
-}
 
 #ifdef  USE_FULL_ASSERT
 /**

@@ -63,6 +63,8 @@ void TransmitChar (char x);
 void TransmitString (char* x);
 void TransmitToTopBoard(char message);
 void ReceiveFromTopBoard(void);
+void LED_Init();
+void USART_Init();
 
 /* USER CODE END PFP */
 /* Private user code ---------------------------------------------------------*/
@@ -81,15 +83,26 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	__HAL_RCC_USART3_CLK_ENABLE();
-	__HAL_RCC_GPIOC_CLK_ENABLE();
 	
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
 	
   /* USER CODE BEGIN 2 */
+	LED_Init();
+	USART_Init();
+															 
+  /* USER CODE END 2 */
+
+  /* USER CODE BEGIN WHILE */
+  while (1){
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
+  }
+}
+
+void LED_Init(){
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+
 	// INIT LED PINS.
 	GPIO_InitTypeDef initStrLED = {GPIO_PIN_6| GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
 																 GPIO_MODE_OUTPUT_PP,
@@ -98,8 +111,13 @@ int main(void)
 	
 	// Initialize pins PC6 & PC7 & PC8 & PC9.
 	HAL_GPIO_Init(GPIOC, &initStrLED); 
+}
 
-	// INITIALIZE THE TX LINE.
+void USART_Init(){
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+	__HAL_RCC_USART3_CLK_ENABLE();
+	
+		// INITIALIZE THE TX LINE.
 	GPIO_InitTypeDef initStr = {GPIO_PIN_10,
 														  GPIO_MODE_AF_PP,
 														  GPIO_SPEED_FREQ_LOW,
@@ -128,23 +146,18 @@ int main(void)
 	// SETS THE USART ENABLE BIT 0 TO 1 (USART ENABLED).													 
 	USART3 -> CR1 |= 1;
 
-    //set the enables on TX, Rx, then enable USART fully
-    USART3->CR1 |= (1 << 3); //te
-    USART3->CR1 |= (1 << 2); //re
-    USART3->CR1 |= (1 << 0); //ue
+	// ENABLE TX AND RX
+	USART3->CR1 |= (1 << 3);
+	USART3->CR1 |= (1 << 2);
+	
+	// ENABLE THE USART
+	USART3->CR1 |= (1 << 0);
 
-    // ENABLE THE Receive Register Not Empty Interrupt (RNE)	.
-      USART3 -> CR1 |= (1 << 5);
+	// ENABLE THE Receive Register Not Empty Interrupt (RNE)	.
+	USART3 -> CR1 |= (1 << 5);
 	
 	// ENABLE THE USART PRIORITY IN THE NVIC.
 	NVIC_EnableIRQ(USART3_4_IRQn);
-															 
-  /* USER CODE END 2 */
-
-  /* USER CODE BEGIN WHILE */
-  while (1){
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
-  }
 }
 
 /**
@@ -246,7 +259,7 @@ void ReceiveFromTopBoard(void){
 	// Read_data is STARTMOTOR Signal
 	if(read_data == START_MOTOR){
 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
-		TransmitToTopBoard('S');				
+		TransmitToTopBoard('A');				
 	}
 	
 	// Read_data is ACK Signal

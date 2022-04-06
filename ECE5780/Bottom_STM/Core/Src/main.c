@@ -272,6 +272,7 @@ void TransmitString (char* x){
 }
 /* USER CODE END 4 */
 
+//UART interupt handler
 void USART3_4_IRQHandler(void){
 	
 	// RECEIVE DATA WHEN INTERRUPT HANDLER IS TRIGGERED.
@@ -285,9 +286,12 @@ void USART3_4_IRQHandler(void){
 	USART3 -> ISR &= ~(1<<3); // ORE REGISTER
 }
 
+
+//Limit switch interupt handler
 void EXTI0_1_IRQHandler(void){
 	// TODO! :)
-	
+	//turn off LED
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
 }
 
 /* Transmits a message to the top board. */

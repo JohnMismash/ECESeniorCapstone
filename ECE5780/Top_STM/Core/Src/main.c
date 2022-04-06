@@ -5,6 +5,7 @@ PIN ASSIGNMENT:
 PB10/PB11 - USART Interface
 PB0 - Limit Switch Signal Pin
 PC6-9 - LED Pins
+PC0 - Distance Sensor (White Wire)
 
 V1 Implementation of Inter-board communication via UART.  Boards will speak to each other
 		Testing will involve pressing a button to signal another STM board to turn on an LED

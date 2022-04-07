@@ -1,51 +1,48 @@
 /* USER CODE BEGIN Header */
-/** ECE 3992/4710 FINAL PROJECT CODE
+/** ECE 3992/4710 FINAL PROJECT CODE - TOP MICROCONTROLLER BOARD
 
 PIN ASSIGNMENT:
 PB10/PB11 - USART Interface
 PC6-9 - LED Pins
 PC0 - Distance Sensor (White Wire)
 
-
-
-HOW	TO WIRE THE UART CONNECTION --------------------------------------------
+----------------------------------------------------------------------------
+HOW	TO WIRE THE UART CONNECTION:
 1. Ground on top board goes to ground on bottom board
 2. PB10 on top board goes to PB11 on bottom board
 3. PB11 on top board goes to PB10 on bottom board
 ----------------------------------------------------------------------------
 
-HOW	TO WIRE THE DISTANCE SENSOR --------------------------------------------
+----------------------------------------------------------------------------
+HOW	TO WIRE THE DISTANCE SENSOR:
 1. Red wire goes to 5 volts on the board
 2. Black wire goes to ground on the board
 3. White wire goes to PC0 on the board
 ----------------------------------------------------------------------------
 
-
-
 V1 Implementation of Inter-board communication via UART.  Boards will speak to each other
 		Testing will involve pressing a button to signal another STM board to turn on an LED
 
+******************************************************************************
+* @file           : main.c
+* @brief          : Main program body for the TOP microcontroller
+* @authors				: John (Jack) Mismash, u1179865 - University of Utah - ECE 5780
+*						  			Andrew Porter, u1071655 - University of Utah - ECE 5780
+*						  			Tony Robinson, u0531330 - University of Utah - ECE 5780
+*						  			Lindsey Enders, u1250233 - University of Utah - ECE 5780
+******************************************************************************
+* @attention
+*
+* Copyright (c) 2022 STMicroelectronics.
+* All rights reserved.
+*
+* This software is licensed under terms that can be found in the LICENSE file
+* in the root directory of this software component.
+* If no LICENSE file comes with this software, it is provided AS-IS.
+*
+******************************************************************************
+*/
 
-
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body for the TOP microcontroller
-	* @authors				: John (Jack) Mismash, u1179865 - University of Utah - ECE 5780
-	*						  Andrew Porter, u1071655 - University of Utah - ECE 5780
-	*						  Tony Robinson, u0531330 - University of Utah - ECE 5780
-	*						  Lindsey Enders, u1250233 - University of Utah - ECE 5780
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2022 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -158,6 +155,7 @@ int main(void)
   }
 }
 
+// INITIALIZE LED PINS
 void LED_Init(void){
 	__HAL_RCC_GPIOC_CLK_ENABLE();
 
@@ -171,6 +169,7 @@ void LED_Init(void){
 	HAL_GPIO_Init(GPIOC, &initStrLED);
 }
 
+// INITIALIZE USART INTERFACE
 void USART_Init(void){
 	// INITIALIZE THE TX LINE.
 	GPIO_InitTypeDef initStr = {GPIO_PIN_10,
@@ -211,7 +210,7 @@ void USART_Init(void){
 	NVIC_EnableIRQ(USART3_4_IRQn);																													
 }
 
-//This does all the setup for the Analog to Digital converter that is used for the distance sensor
+// INITIALIZE DISTANCE SENSOR & ADC (ANALOG TO DIGITAL CONVERTER) INTERFACE
 void DistanceSensor_Init(void){
 
   // Red wire is 5 volts
@@ -370,29 +369,25 @@ void USART3_4_IRQHandler(void){
 	// RESET FLAGS
 	USART3 -> ISR &= ~(1<<5);// RXNE REGISTER
 	USART3 -> ISR &= ~(1<<3);// ORE REGISTER
-	
 }
 
-/* Transmits a message to the bottom board. */
+// TRANSMITS A MESSAGE TO THE BOTTOM BOARD
 void TransmitToBottomBoard(void){
 	
 	/* MESSAGE FROM TOP BOARD TO BOTTOM BOARD */
 	TransmitChar(START_MOTOR);
-  //TransmitChar('s');
+
 }
 
-/* Receives a message from the bottom board. */
+// RECEIVES A MESSAGE FROM THE BOTTOM BOARD
 void ReceiveFromBottomBoard(uint8_t read_data){
 	
-	// Read_data is STARTMOTOR Signal
+	// read_data IS STARTMOTOR SIGNAL
 	if(read_data == START_MOTOR){
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
-		//TransmitChar(0xFF);				
+		
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);				
 	}
-	
-	
 }
-
 
 #ifdef  USE_FULL_ASSERT
 /**

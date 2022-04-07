@@ -1,23 +1,23 @@
 /* USER CODE BEGIN Header */
-/** ECE 3992/4710 FINAL PROJECT CODE
+/** ECE 3992/4710 FINAL PROJECT CODE - BOTTOM MICROCONTROLLER BOARD
 
 PIN ASSIGNMENT:
 PB10/PB11 - USART Interface
 PA0 - Limit Switch Signal Pin
 PC6-9 - LED Pins
 
-
-
-HOW	TO WIRE THE LIMIT SWITCH ----------------------------------------------
-1. Black wire goes to PA0 (It is NOT grouded!), 
+---------------------------------------------------------------------------
+HOW	TO WIRE THE LIMIT SWITCH:
+1. Black wire goes to PA0 (It is NOT grounded!)
 2. Yellow wire goes to 3V pin on board
 ---------------------------------------------------------------------------
 
-HOW	TO WIRE THE UART CONNECTION --------------------------------------------
+---------------------------------------------------------------------------
+HOW	TO WIRE THE UART CONNECTION:
 1. Ground on top board goes to ground on bottom board
-2. PB10 on top board goes to PB11 on bottom board
-3. PB11 on top board goes to PB10 on bottom board
-----------------------------------------------------------------------------
+2. PB10 on Top Board goes to PB11 on Bottom Board
+3. PB11 on Top Board goes to PB10 on Bottom Board
+---------------------------------------------------------------------------
 
 
 V1 Implementation of Inter-board communication via USART.  Boards will speak to each other
@@ -25,27 +25,26 @@ V1 Implementation of Inter-board communication via USART.  Boards will speak to 
 
 V2 Implementing Limit Switch to reset LED signal after USART connection is made.
 
-	
+******************************************************************************
+* @file           : main.c
+* @brief          : Main program body for the BOTTOM microcontroller
+* @authors				: John (Jack) Mismash, u1179865 - University of Utah - ECE 5780
+*						  			Andrew Porter, u1071655 - University of Utah - ECE 5780
+*						  			Tony Robinson, u0531330 - University of Utah - ECE 5780
+*						  			Lindsey Enders, u1250233 - University of Utah - ECE 5780
+******************************************************************************
+* @attention
+*
+* Copyright (c) 2022 STMicroelectronics.
+* All rights reserved.
+*
+* This software is licensed under terms that can be found in the LICENSE file
+* in the root directory of this software component.
+* If no LICENSE file comes with this software, it is provided AS-IS.
+*
+******************************************************************************
+*/
 
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body for the BOTTOM microcontroller
-	* @authors				: John (Jack) Mismash, u1179865 - University of Utah - ECE 5780
-	*						  Andrew Porter, u1071655 - University of Utah - ECE 5780
-	*						  Tony Robinson, u0531330 - University of Utah - ECE 5780
-	*						  Lindsey Enders, u1250233 - University of Utah - ECE 5780
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2022 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -74,7 +73,6 @@ V2 Implementing Limit Switch to reset LED signal after USART connection is made.
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
 char START_MOTOR = 'S';
 	
 /* USER CODE END PV */
@@ -114,8 +112,8 @@ int main(void)
   /* Initialize all configured peripherals */
 	
   /* USER CODE BEGIN 2 */
+  __HAL_RCC_GPIOA_CLK_ENABLE();	
   __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
 	
   LED_Init();
   USART_Init();
@@ -130,7 +128,10 @@ int main(void)
   }
 }
 
+// INITIALIZE LED PINS
 void LED_Init(void){
+	
+	// ENABLE THE GPIOC
 	__HAL_RCC_GPIOC_CLK_ENABLE();
 
 	// INIT LED PINS.
@@ -139,12 +140,11 @@ void LED_Init(void){
 									GPIO_SPEED_FREQ_LOW,
 									GPIO_NOPULL};
 	
-	// Initialize pins PC6 & PC7 & PC8 & PC9.
+	// INIT PINS PC6, PC7, PC8 AND PC9.
 	HAL_GPIO_Init(GPIOC, &initStrLED); 
 }
 
-
-
+// INITIALIZE USART INTERFACE
 void USART_Init(void){
 	__HAL_RCC_USART3_CLK_ENABLE();
 	
@@ -157,7 +157,7 @@ void USART_Init(void){
 	// INITIALIZE THE RX LINE.
 	GPIO_InitTypeDef initStr1 = {GPIO_PIN_11,
 								 GPIO_MODE_AF_PP,
-								 PIO_SPEED_FREQ_LOW,
+								 GPIO_SPEED_FREQ_LOW,
 								 GPIO_PULLUP};
 	
 	// INIT PIN 10 & 11.														 
@@ -191,26 +191,25 @@ void USART_Init(void){
 	NVIC_EnableIRQ(USART3_4_IRQn);
 }
 
-
-
+// INITIALIZE LIMIT SWITCH INTERFACE
 void LimitSwitch_Init(void){
 
-  __HAL_RCC_SYSCFG_CLK_ENABLE();  // USE THE RCC TO ENABLE THE SYSCFG PERIPHERAL CLK
+	// USE THE RCC TO ENABLE THE SYSCFG PERIPHERAL CLK
+  __HAL_RCC_SYSCFG_CLK_ENABLE();
 
   // INIT PIN PA0 TO INPUT MODE.
   GPIO_InitTypeDef initStr = {GPIO_PIN_0,
-								GPIO_MODE_INPUT,
-								GPIO_SPEED_FREQ_LOW,
-								GPIO_PULLUP};
+															GPIO_MODE_INPUT,
+															GPIO_SPEED_FREQ_LOW,
+															GPIO_PULLUP};
+	
   HAL_GPIO_Init(GPIOA, &initStr); // INIT PA0.
 
-  EXTI -> IMR |= (1 << 0);        //CREATE AS A INTERRUPT SIGNAL, NOT EVENT SIGNAL.	
-  EXTI -> RTSR |= (1 << 0);	     //ENABLES RISING TRIGGER EVENT FOR PB0.
+  EXTI -> IMR |= (1 << 0);         // CREATE AS A INTERRUPT SIGNAL, NOT EVENT SIGNAL.	
+  EXTI -> RTSR |= (1 << 0);	     	 // ENABLES RISING TRIGGER EVENT FOR PA0.
   SYSCFG -> EXTICR[0] |= 0;        // ROUTE PA0 TO THE EXTI INPUT LINE 0 (EXTI0).
   NVIC_EnableIRQ(EXTI0_1_IRQn);    // ENABLE THE EXTI INTERRUPT.	
 }
-
-
 
 /**
   * @brief System Clock Configuration
@@ -290,7 +289,7 @@ void TransmitString (char* x){
 }
 
 
-//UART interupt handler
+// USART INTERRUPT HANDLER
 void USART3_4_IRQHandler(void){
 	
 	// RECEIVE DATA WHEN INTERRUPT HANDLER IS TRIGGERED.
@@ -306,19 +305,20 @@ void USART3_4_IRQHandler(void){
 
 
 
-//Limit switch interupt handler
+// LIMIT SWITCH INTERRUPT HANDLER
 void EXTI0_1_IRQHandler(void){
-	//turn off LED
-	//TODO: turn off the motor
+
+	// TURN OFF LED
 	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
 
-	//Turn off the interupt signal
+	// TURN OFF THE INTERRUPT SIGNAL
 	EXTI->PR |= (1<<0);
+	
+	// TODO: TURN OFF MOTOR
 }
 
 
-
-/* Transmits a message to the top board. */
+// TRANSMITS A MESSAGE TO THE TOP BOARD
 void TransmitToTopBoard(char message){
 	
 	/* MESSAGE FROM BOTTOM BOARD TO TOP BOARD. */
@@ -327,16 +327,16 @@ void TransmitToTopBoard(char message){
 
 
 
-/* Receives a message from the top board. */
+// RECEIVES A MESSAGE FROM THE TOP BOARD
 void ReceiveFromTopBoard(uint8_t read_data){
-	// Read_data is STARTMOTOR Signal
+	
+	// read_data IS STARTMOTOR SIGNAL
 	if(read_data == START_MOTOR){
-		//TODO: start the motor
+		
+		// TODO: START THE MOTOR
 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
 	}
-
 }
-
 
 #ifdef  USE_FULL_ASSERT
 /**

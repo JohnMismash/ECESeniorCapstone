@@ -28,3 +28,6 @@ bottom_stm\main.o: ../Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_i2c.h
 bottom_stm\main.o: ../Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_i2c_ex.h
 bottom_stm\main.o: ../Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_pwr.h
 bottom_stm\main.o: ../Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_pwr_ex.h
+bottom_stm\main.o: ../Core/Inc/motor.h
+bottom_stm\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+bottom_stm\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h

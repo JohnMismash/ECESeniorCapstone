@@ -52,6 +52,8 @@ V2 Implementing Limit Switch to reset LED signal after USART connection is made.
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "motor.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

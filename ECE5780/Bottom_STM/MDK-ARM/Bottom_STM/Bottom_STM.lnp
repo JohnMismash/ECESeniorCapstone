@@ -3,6 +3,7 @@
 "bottom_stm\main.o"
 "bottom_stm\stm32f0xx_it.o"
 "bottom_stm\stm32f0xx_hal_msp.o"
+"bottom_stm\motor.o"
 "bottom_stm\stm32f0xx_hal_tim.o"
 "bottom_stm\stm32f0xx_hal_tim_ex.o"
 "bottom_stm\stm32f0xx_hal_rcc.o"

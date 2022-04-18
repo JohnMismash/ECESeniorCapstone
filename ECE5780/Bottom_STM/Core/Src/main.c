@@ -76,6 +76,9 @@ V2 Implementing Limit Switch to reset LED signal after USART connection is made.
 
 /* USER CODE BEGIN PV */
 char START_MOTOR = 'S';
+char STOP_MOTOR = 'X';
+
+char motorReverse = 0;
 	
 /* USER CODE END PV */
 
@@ -116,10 +119,16 @@ int main(void)
   /* USER CODE BEGIN 2 */
   __HAL_RCC_GPIOA_CLK_ENABLE();	
   __HAL_RCC_GPIOB_CLK_ENABLE();
+	__HAL_RCC_GPIOC_CLK_ENABLE();
 	
   LED_Init();
   USART_Init();
   LimitSwitch_Init();
+	motor_init();
+	
+	//motor_forward();
+	//motor_reverse();
+	//motor_run(10);
 															 
   /* USER CODE END 2 */
 
@@ -127,6 +136,19 @@ int main(void)
   while (1){
 	  HAL_Delay(200);
 	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
+		
+		if(motorReverse == 1){
+			HAL_Delay(1000);
+			motor_reverse();
+			motor_run(10);
+			motorReverse = 0;
+		}
+		/*
+		motor_forward();
+		HAL_Delay(1000);
+		motor_run(10);
+		HAL_Delay(2000);
+		*/
   }
 }
 
@@ -312,11 +334,16 @@ void EXTI0_1_IRQHandler(void){
 
 	// TURN OFF LED
 	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
+	
+	// TODO: TURN OFF MOTOR
+	motor_hold();
+	motorReverse = 1;
+	//HAL_Delay(3000);
+	//motor_reverse();
+	//motor_run(10);
 
 	// TURN OFF THE INTERRUPT SIGNAL
 	EXTI->PR |= (1<<0);
-	
-	// TODO: TURN OFF MOTOR
 }
 
 
@@ -337,6 +364,12 @@ void ReceiveFromTopBoard(uint8_t read_data){
 		
 		// TODO: START THE MOTOR
 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
+		motor_forward();
+		motor_run(10);
+	}
+	
+	if (read_data == STOP_MOTOR){
+		motor_hold();
 	}
 }
 

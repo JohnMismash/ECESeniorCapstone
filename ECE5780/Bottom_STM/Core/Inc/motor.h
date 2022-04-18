@@ -57,6 +57,9 @@ void read_temp(void);
 // Sets up the PWM and direction signals to drive the H-Bridge
 void pwm_init(void);
 
+//Sets up basic H-bridge controls (no PWM)
+//void basic_control_init(void);
+
 // Sets up ADC to measure motor current
 void ADC_init(void);
 

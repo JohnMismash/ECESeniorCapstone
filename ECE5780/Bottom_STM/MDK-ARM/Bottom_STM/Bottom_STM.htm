@@ -3,7 +3,7 @@
 <title>Static Call Graph - [Bottom_STM\Bottom_STM.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image Bottom_STM\Bottom_STM.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Sun Apr 17 21:03:14 2022
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Sun Apr 17 21:21:32 2022
 <BR><P>
 <H3>Maximum Stack Usage =        192 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -560,10 +560,11 @@ Global Symbols
 <P><STRONG><a name="[a]"></a>PendSV_Handler</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f0xx_it.o(i.PendSV_Handler))
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f072xb.o(RESET)
 </UL>
-<P><STRONG><a name="[5b]"></a>ReceiveFromTopBoard</STRONG> (Thumb, 32 bytes, Stack size 8 bytes, main.o(i.ReceiveFromTopBoard))
-<BR><BR>[Stack]<UL><LI>Max Depth = 12<LI>Call Chain = ReceiveFromTopBoard &rArr; motor_run
+<P><STRONG><a name="[5b]"></a>ReceiveFromTopBoard</STRONG> (Thumb, 44 bytes, Stack size 16 bytes, main.o(i.ReceiveFromTopBoard))
+<BR><BR>[Stack]<UL><LI>Max Depth = 20<LI>Call Chain = ReceiveFromTopBoard &rArr; motor_run
 </UL>
 <BR>[Calls]<UL><LI><a href="#[5d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motor_run
+<LI><a href="#[47]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motor_hold
 <LI><a href="#[5c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motor_forward
 <LI><a href="#[46]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_WritePin
 </UL>
@@ -594,7 +595,7 @@ Global Symbols
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f072xb.o(.text)
 </UL>
 <P><STRONG><a name="[29]"></a>USART3_4_IRQHandler</STRONG> (Thumb, 34 bytes, Stack size 8 bytes, main.o(i.USART3_4_IRQHandler))
-<BR><BR>[Stack]<UL><LI>Max Depth = 20<LI>Call Chain = USART3_4_IRQHandler &rArr; ReceiveFromTopBoard &rArr; motor_run
+<BR><BR>[Stack]<UL><LI>Max Depth = 28<LI>Call Chain = USART3_4_IRQHandler &rArr; ReceiveFromTopBoard &rArr; motor_run
 </UL>
 <BR>[Calls]<UL><LI><a href="#[5b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ReceiveFromTopBoard
 </UL>
@@ -639,7 +640,8 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[47]"></a>motor_hold</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, motor.o(i.motor_hold))
-<BR><BR>[Called By]<UL><LI><a href="#[11]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EXTI0_1_IRQHandler
+<BR><BR>[Called By]<UL><LI><a href="#[5b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ReceiveFromTopBoard
+<LI><a href="#[11]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EXTI0_1_IRQHandler
 </UL>
 
 <P><STRONG><a name="[63]"></a>motor_init</STRONG> (Thumb, 12 bytes, Stack size 4 bytes, motor.o(i.motor_init))

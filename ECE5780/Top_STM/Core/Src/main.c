@@ -13,6 +13,12 @@ HOW	TO WIRE THE UART CONNECTION:
 3. PB11 on top board goes to PB10 on bottom board
 ----------------------------------------------------------------------------
 
+---------------------------------------------------------------------------
+HOW	TO WIRE THE LIMIT SWITCH:
+1. Black wire goes to PA0 (It is NOT grounded!)
+2. Yellow wire goes to 3V pin on board
+---------------------------------------------------------------------------
+
 ----------------------------------------------------------------------------
 HOW	TO WIRE THE DISTANCE SENSOR:
 1. Red wire goes to 5 volts on the board
@@ -63,8 +69,6 @@ V1 Implementation of Inter-board communication via UART.  Boards will speak to e
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define STARTMOTOR 0x44;
-#define STOPMOTOR  0x55;
 
 /* USER CODE END PM */
 
@@ -72,6 +76,7 @@ V1 Implementation of Inter-board communication via UART.  Boards will speak to e
 /* USER CODE BEGIN PV */
 
 char START_MOTOR = 'S';
+char STOP_MOTOR = 'X';
 
 /* USER CODE END PV */
 
@@ -81,11 +86,12 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 void TransmitChar (char );
 void TransmitString (char* );
-void TransmitToBottomBoard(void);
+void TransmitToBottomBoard(char);
 void ReceiveFromBottomBoard(uint8_t );
 void LED_Init(void);
 void USART_Init(void);
 void DistanceSensor_Init(void);
+void LimitSwitch_Init(void);
 
 int READY_TO_GO;
 	
@@ -114,6 +120,7 @@ int main(void)
   /* Initialize all configured peripherals */
 	LED_Init();
 	USART_Init();
+  LimitSwitch_Init();
 	DistanceSensor_Init(); // PC0
 
   /* USER CODE BEGIN 2 */
@@ -150,7 +157,7 @@ int main(void)
        
 	    READY_TO_GO = 0;
 
-      TransmitToBottomBoard();  
+      TransmitToBottomBoard(START_MOTOR);  
     }
   }
 }
@@ -209,6 +216,43 @@ void USART_Init(void){
 	// ENABLE THE USART PRIORITY IN THE NVIC.
 	NVIC_EnableIRQ(USART3_4_IRQn);																													
 }
+
+
+
+// INITIALIZE LIMIT SWITCH INTERFACE
+void LimitSwitch_Init(void){
+
+	// USE THE RCC TO ENABLE THE SYSCFG PERIPHERAL CLK
+  __HAL_RCC_SYSCFG_CLK_ENABLE();
+
+  // INIT PIN PA0 TO INPUT MODE.
+  GPIO_InitTypeDef initStr = {GPIO_PIN_0,
+															GPIO_MODE_INPUT,
+															GPIO_SPEED_FREQ_LOW,
+															GPIO_PULLUP};
+	
+  HAL_GPIO_Init(GPIOA, &initStr); // INIT PA0.
+
+  EXTI -> IMR |= (1 << 0);         // CREATE AS A INTERRUPT SIGNAL, NOT EVENT SIGNAL.	
+  EXTI -> RTSR |= (1 << 0);	     	 // ENABLES RISING TRIGGER EVENT FOR PA0.
+  SYSCFG -> EXTICR[0] |= 0;        // ROUTE PA0 TO THE EXTI INPUT LINE 0 (EXTI0).
+  NVIC_EnableIRQ(EXTI0_1_IRQn);    // ENABLE THE EXTI INTERRUPT.	
+}
+
+
+
+// LIMIT SWITCH INTERRUPT HANDLER
+void EXTI0_1_IRQHandler(void){
+  // Send signal to bottom board to turn off the motor
+  TransmitToBottomBoard(STOP_MOTOR);
+  
+	// TURN OFF THE INTERRUPT SIGNAL
+	EXTI->PR |= (1<<0);
+	
+	
+}
+
+
 
 // INITIALIZE DISTANCE SENSOR & ADC (ANALOG TO DIGITAL CONVERTER) INTERFACE
 void DistanceSensor_Init(void){
@@ -372,21 +416,16 @@ void USART3_4_IRQHandler(void){
 }
 
 // TRANSMITS A MESSAGE TO THE BOTTOM BOARD
-void TransmitToBottomBoard(void){
+void TransmitToBottomBoard(char myChar){
 	
 	/* MESSAGE FROM TOP BOARD TO BOTTOM BOARD */
-	TransmitChar(START_MOTOR);
+	TransmitChar(myChar);
 
 }
 
 // RECEIVES A MESSAGE FROM THE BOTTOM BOARD
 void ReceiveFromBottomBoard(uint8_t read_data){
 	
-	// read_data IS STARTMOTOR SIGNAL
-	if(read_data == START_MOTOR){
-		
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);				
-	}
 }
 
 #ifdef  USE_FULL_ASSERT

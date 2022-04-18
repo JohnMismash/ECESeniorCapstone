@@ -19,11 +19,20 @@ HOW	TO WIRE THE UART CONNECTION:
 3. PB11 on Top Board goes to PB10 on Bottom Board
 ---------------------------------------------------------------------------
 
+---------------------------------------------------------------------------
+HOW TO WIRE THE MOTOR CONNECTION:
+1. ENABLE on motor controller connects to PA4
+2. INPUT 1 on the motor controller connects to PA5
+3. INPUT 2 on the motor controller connects to PC0
+4. I_SENSE on the motor controller connects to PA1 (Not yet tested).
+---------------------------------------------------------------------------
 
 V1 Implementation of Inter-board communication via USART.  Boards will speak to each other
 		Testing will involve pressing a button to signal another STM board to turn on an LED
 
 V2 Implementing Limit Switch to reset LED signal after USART connection is made.
+
+V3 Integrating basic motor code and control with USART and limit switch triggers.
 
 ******************************************************************************
 * @file           : main.c

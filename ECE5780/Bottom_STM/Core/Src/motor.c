@@ -23,13 +23,27 @@ IN 1 = LOW, IN 2 = HIGH: Reverse direction
 
 // Sets up the entire motor drive system
 void motor_init(void) {
-	pwm_init();
+	//pwm_init();
+	basic_control_init();
 	ADC_init();
+	
+}
+
+// Sets up PA4 as a direct HIGH or LOW enable for the H-bridge
+// Sets up PA5 and PC0 to be the DIRECTION inputs to the H-Bridge
+void basic_control_init(void){
+	//GPIOA->MODER = 0x28000000; //Reset value
+	GPIOA->MODER |= (1 << 8) | (1 << 10); //Set PA4 and PA5 as output
+	GPIOC->MODER |= (1 << 0); //PC0 as output
+	
+	GPIOA->ODR = 0; //Set everything to OFF by default.
+	GPIOC->ODR = 0;
 	
 }
 
 // Sets up the PWM and direction signals to drive the H-Bridge
 void pwm_init(void) {
+	/** TO DO -- Clean up and test PWM enable using the new pins **/
 	
 	/*
 	// Set up pin PA4 for H-bridge PWM output (TIMER 14 CH1)
@@ -41,7 +55,7 @@ void pwm_init(void) {
 	GPIOA->AFR[0] |= (1 << 18);
 	*/
 	
-	
+	/*
 	//For testing, set PA4 to a simple output instead.
 	GPIOA->MODER = 0x28000000; //Reset value
 	GPIOA->MODER |= (1 << 8) | (1 << 10); //Set PA4 as output
@@ -62,6 +76,7 @@ void pwm_init(void) {
 	GPIOC->ODR = 0;
 	
 	GPIOC->MODER |= (1 << 0);
+	*/
 	
 	//Initialize one direction pin to high, the other low
 	//Default is forward direction.

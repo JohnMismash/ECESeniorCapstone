@@ -193,6 +193,7 @@ void USART_Init(void){
 	NVIC_EnableIRQ(USART3_4_IRQn);
 }
 
+
 // INITIALIZE LIMIT SWITCH INTERFACE
 void LimitSwitch_Init(void){
 
@@ -212,6 +213,7 @@ void LimitSwitch_Init(void){
   SYSCFG -> EXTICR[0] |= 0;        // ROUTE PA0 TO THE EXTI INPUT LINE 0 (EXTI0).
   NVIC_EnableIRQ(EXTI0_1_IRQn);    // ENABLE THE EXTI INTERRUPT.	
 }
+
 
 /**
   * @brief System Clock Configuration

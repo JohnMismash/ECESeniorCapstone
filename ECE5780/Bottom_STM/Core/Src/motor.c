@@ -18,6 +18,11 @@ IN 2: PC0
 IN 1 = HIGH, IN 2 = LOW: Forward direction
 IN 1 = LOW, IN 2 = HIGH: Reverse direction
 
+Controls:
+PA4 = Enable
+
+PA1 = Current sensing.
+
 */
 
 
@@ -33,11 +38,13 @@ void motor_init(void) {
 // Sets up PA5 and PC0 to be the DIRECTION inputs to the H-Bridge
 void basic_control_init(void){
 	//GPIOA->MODER = 0x28000000; //Reset value
+	GPIOA->MODER &= ~((3 << 8) | (3 << 10)); //Zero out PA4 and PA5 in GPIOA
 	GPIOA->MODER |= (1 << 8) | (1 << 10); //Set PA4 and PA5 as output
+	GPIOC->MODER &= ~(3 << 0); //Zero out PC0 of GPIOC
 	GPIOC->MODER |= (1 << 0); //PC0 as output
 	
-	GPIOA->ODR = 0; //Set everything to OFF by default.
-	GPIOC->ODR = 0;
+	GPIOA->ODR &= ~((1 << 4) | (1 << 5)); //Set PA4 and PA5 to OFF by default.
+	GPIOC->ODR &= ~(1 << 0); //Set PC0 to OFF by default.
 	
 }
 
@@ -139,27 +146,23 @@ void ADC_init(void) {
 void motor_forward(void){
 	//First, set EN (duty cycle) to 0 to prevent any potential locking of motor (where input pins are equal)
 	//and prevent sudden direction changes (bad for motor internals).
+	
 	//pwm_setDutyCycle(0);
-	GPIOC->ODR = 0;
-	GPIOA->ODR = 0;
+	
+	GPIOA->ODR &= ~(1 << 4); //Set PA4 to low.
+	GPIOC->ODR &= ~(1 << 0); //Set PC0 to low.
+
+	//Set PA5 to high for forward.
 	GPIOA->ODR |= (1 << 5);
-	
-	//GPIOA->ODR &= ~(1 << 4); //Disable the enable pin
-	
-	//Forward is defined as pin 5 = high, pin 6 = low.
-	//GPIOA->BSRR |= (1 << 5) | (1 << 22);
 }
 
 void motor_reverse(void){
 	//pwm_setDutyCycle(0);
-	GPIOA->ODR = 0;
-	GPIOC->ODR = 0;
-	//GPIOC->ODR |= (1 << 0);
+	GPIOA->ODR &= ~((1 << 4) | (1 << 5)); //Set PA4 and PA5 to low.
+	//GPIOC->ODR &= ~(1 << 0); //Set PC0 to low.
+
+	//Set PC0 to high for reverse.
 	GPIOC->ODR |= (1 << 0);
-	//GPIOA->ODR &= ~(1 << 4); //Disable the enable pin
-	
-	//Reverse is defined as pin 6 = high, pin 5 = low.
-	//GPIOA->BSRR |= (1 << 6) | (1 << 21);
 }
 
 void motor_run(uint8_t duty){
@@ -170,7 +173,8 @@ void motor_run(uint8_t duty){
 
 void motor_hold(void){
 	//pwm_setDutyCycle(0);
-	GPIOA->ODR = 0;
+	GPIOA->ODR &= ~((1 << 4) | (1 << 5)); //Set PA4 and PA5 to low.
+	GPIOC->ODR &= ~(1 << 0); //Set PC0 to low.
 }
 
 //Meaningful values TBD for our case.

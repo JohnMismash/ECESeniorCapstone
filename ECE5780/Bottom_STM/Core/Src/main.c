@@ -87,7 +87,8 @@ V3 Integrating basic motor code and control with USART and limit switch triggers
 char START_MOTOR = 'S';
 char STOP_MOTOR = 'X';
 
-char motorReverse = 0;
+char motorReverse = 0; //Flag that tells the system it can initiate lifting sequence.
+char cycleTriggered = 0; //Prevents accidental limit switch trigger.
 	
 /* USER CODE END PV */
 
@@ -134,10 +135,6 @@ int main(void)
   USART_Init();
   LimitSwitch_Init();
 	motor_init();
-	
-	//motor_forward();
-	//motor_reverse();
-	//motor_run(10);
 															 
   /* USER CODE END 2 */
 
@@ -146,18 +143,13 @@ int main(void)
 	  HAL_Delay(200);
 	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
 		
-		if(motorReverse == 1){
-			HAL_Delay(1000);
+		if(motorReverse == 1 && cycleTriggered == 0){
+			HAL_Delay(1000); //TO DO: Determine the delay for the lid at the bottom position.
 			motor_reverse();
 			motor_run(10);
 			motorReverse = 0;
+			cycleTriggered = 1; //Prevent triggering more raising if limit switch is bumped by something other than the lid.
 		}
-		/*
-		motor_forward();
-		HAL_Delay(1000);
-		motor_run(10);
-		HAL_Delay(2000);
-		*/
   }
 }
 
@@ -340,7 +332,7 @@ void USART3_4_IRQHandler(void){
 
 
 
-// LIMIT SWITCH INTERRUPT HANDLER
+//(BOTTOM) LIMIT SWITCH INTERRUPT HANDLER
 void EXTI0_1_IRQHandler(void){
 
 	// TURN OFF LED
@@ -349,9 +341,6 @@ void EXTI0_1_IRQHandler(void){
 	// TODO: TURN OFF MOTOR
 	motor_hold();
 	motorReverse = 1;
-	//HAL_Delay(3000);
-	//motor_reverse();
-	//motor_run(10);
 
 	// TURN OFF THE INTERRUPT SIGNAL
 	EXTI->PR |= (1<<0);
@@ -373,7 +362,7 @@ void ReceiveFromTopBoard(uint8_t read_data){
 	// read_data IS STARTMOTOR SIGNAL
 	if(read_data == START_MOTOR){
 		
-		// TODO: START THE MOTOR
+		//START THE MOTOR
 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
 		motor_forward();
 		motor_run(10);

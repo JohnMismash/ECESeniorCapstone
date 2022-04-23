@@ -25,6 +25,8 @@ HOW TO WIRE THE MOTOR CONNECTION:
 2. INPUT 1 on the motor controller connects to PA5
 3. INPUT 2 on the motor controller connects to PC0
 4. I_SENSE on the motor controller connects to PA1 (Not yet tested).
+5. Both grounds on the  motor controller connects to ground on the STM board.
+6. 5 Volts on the motor controller connects to 5 volts on the STM board
 ---------------------------------------------------------------------------
 
 V1 Implementation of Inter-board communication via USART.  Boards will speak to each other

@@ -3,8 +3,9 @@
 
 PIN ASSIGNMENT:
 PB10/PB11 - USART Interface
-PC6-9 - LED Pins
 PC0 - Distance Sensor (White Wire)
+PA0 - limit switch
+
 
 ----------------------------------------------------------------------------
 HOW	TO WIRE THE UART CONNECTION:
@@ -245,7 +246,10 @@ void LimitSwitch_Init(void){
 void EXTI0_1_IRQHandler(void){
   // Send signal to bottom board to turn off the motor
   TransmitToBottomBoard(STOP_MOTOR);
-  
+
+  //Allow the distance sensor to begin sensing packages again
+  READY_TO_GO = 1;
+
 	// TURN OFF THE INTERRUPT SIGNAL
 	EXTI->PR |= (1<<0);
 	

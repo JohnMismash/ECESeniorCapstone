@@ -78,6 +78,7 @@ V1 Implementation of Inter-board communication via UART.  Boards will speak to e
 
 char START_MOTOR = 'S';
 char STOP_MOTOR = 'X';
+char REACHED_TOP = 'R';
 
 /* USER CODE END PV */
 
@@ -249,6 +250,9 @@ void EXTI0_1_IRQHandler(void){
 
   //Allow the distance sensor to begin sensing packages again
   READY_TO_GO = 1;
+	
+	//Let the bottom board know its at the top.
+	TransmitToBottomBoard(REACHED_TOP);
 
 	// TURN OFF THE INTERRUPT SIGNAL
 	EXTI->PR |= (1<<0);

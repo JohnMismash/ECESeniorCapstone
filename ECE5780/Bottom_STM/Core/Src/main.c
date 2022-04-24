@@ -78,8 +78,6 @@ V3 Integrating basic motor code and control with USART and limit switch triggers
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define STARTMOTOR 'S';
-#define STOPMOTOR  0x55;
 
 /* USER CODE END PM */
 
@@ -88,6 +86,7 @@ V3 Integrating basic motor code and control with USART and limit switch triggers
 /* USER CODE BEGIN PV */
 char START_MOTOR = 'S';
 char STOP_MOTOR = 'X';
+char REACHED_TOP = 'R';
 
 char motorReverse = 0; //Flag that tells the system it can initiate lifting sequence.
 char cycleTriggered = 0; //Prevents accidental limit switch trigger.
@@ -343,6 +342,9 @@ void EXTI0_1_IRQHandler(void){
 	// TODO: TURN OFF MOTOR
 	motor_hold();
 	motorReverse = 1;
+	
+	//DISABLE THE INTERRUPT
+	NVIC_DisableIRQ(EXTI0_1_IRQn);
 
 	// TURN OFF THE INTERRUPT SIGNAL
 	EXTI->PR |= (1<<0);
@@ -372,6 +374,11 @@ void ReceiveFromTopBoard(uint8_t read_data){
 	
 	if (read_data == STOP_MOTOR){
 		motor_hold();
+	}
+	
+	//Re-enable the bottom limit switch interrupt.
+	if(read_data == REACHED_TOP){
+		NVIC_EnableIRQ(EXTI0_1_IRQn); 
 	}
 }
 

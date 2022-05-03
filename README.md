@@ -21,7 +21,7 @@ PCB: Contains the design files of the PCB
 Sensor Testing: Basic Arduino code and schematics that were used to determine how the sensors worked and how to integrate them in the final design.
 
 ### Block Diagram
-![Our Block Diagram](/Motor Calculations/5780BlockDiagram - Page 1.png)
+![Our Block Diagram](https://github.com/JohnMismash/ECESeniorCapstone/blob/main/Motor%20Calculations/5780BlockDiagram%20-%20Page%201.png)
 ### Team Members:
  John 'Jack' Mismash - u1179865
  Andrew Porter - u1071655

@@ -10,13 +10,13 @@ Integrate Sensor Interrupts to trigger movement - The primary sensor used in thi
 Discharge the package from the lift when the lift lowered - Our original design included motorized rollers to discharge the package off of the top of the lift. Due to weight, spacing, and complexity concerns, we found roller ball transfer bearings that completed the task and avoided the potential problems we were having. 
 
 ### Folders in the Repo
-In this repo we have the folders 5780, Motor Calculations, and PCB.
+In this repo we have the folders 5780, Motor Calculations, PCB, and Sensor Testing.
 
 5780: Contains the microcontroller c code.  This folder has "Top_STM" and "Bottom_STM" subfolders that monitor sensor data and send instructions to the motor respectively
 
 Motor Calculations: Contains the files created to determine parameters of the project. We used this math to help select a motor and design a PCB that could power the motor.
 
-PCB: Contains the design files of the PCB
+PCB: Contains the design files of the custom PCB.
 
 Sensor Testing: Basic Arduino code and schematics that were used to determine how the sensors worked and how to integrate them in the final design.
 
@@ -24,9 +24,9 @@ Sensor Testing: Basic Arduino code and schematics that were used to determine ho
 ![Our Block Diagram](https://github.com/JohnMismash/ECESeniorCapstone/blob/main/Motor%20Calculations/5780BlockDiagram%20-%20Page%201.png)
 
 ### Team Members:
- John 'Jack' Mismash - u1179865
- Andrew Porter - u1071655
- E. Lindsey Enders - u1250233
+ John 'Jack' Mismash - u1179865,
+ Andrew Porter - u1071655,
+ E. Lindsey Enders - u1250233,
  Tony Robinson - u0531330
 
 

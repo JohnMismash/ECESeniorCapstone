@@ -1,6 +1,8 @@
-from smbus import SMBus
+
 import time
 import numpy as np
+from smbus import SMBus
+import pygame
 
 class pp_alarm:
     
@@ -15,18 +17,49 @@ class pp_alarm:
         
         try:
             val = self.bus.read_byte_data(0x6A, 0x0F); # Who AM I Protocal
-            print("Who am I:", hex(val))
+            # print("Who am I:", hex(val))
             
         except:
             print("Something Wrong with I2C bus on", hex(self.addr), "\nCheck bus using: i2cdetect -y 1")
             return
         
         # Down Count by 5 seconds
+        # self.path = "./sounds/"
+        # self.sound_files = ["beep.wav", "alarm.wav"]
+
+        # Pygame Setup
+        # pygame.mixer.init()
+        # beep_sound = pygame.mixer.Sound("./sounds/beep.wav")
+        # beep_sound.set_volume(1)
+        # beep_sound.play(loops = 10)
+
+        # for i in range(1,6):
+            
+        #     beep_sound.play(loops = 1)
+        #     time.sleep(0.1) 
+
+        
+        pygame.mixer.init()
+        pygame.mixer.music.set_volume(1)
+        pygame.mixer.music.load("./sounds/beep.wav")
+        pygame.mixer.music.play()
+        
+        
+        for i in range(1,6):
+            pygame.mixer.music.play()
+    
+            # Wait Until first sound is done
+            while pygame.mixer.music.get_busy() == True:
+                continue
+            
+            time.sleep(0.5) 
+        
+        
         print("Alarm Initialized")
         
 
 
-    """ Enabling the Alarm: requre shaking the box to trigger alarm 
+    """ Enabling the Alarm: require shaking the box to trigger alarm 
     """
     def enable_alarm(self):
 
@@ -66,8 +99,8 @@ class pp_alarm:
                 end_time = time.time()
                 elapsed_time = end_time - start_time
                 
-                print("Elapsed Time:", elapsed_time)
-                print("Prev Counter:", prev_counter, "Shake Counter", shaking_counter)
+                # print("Elapsed Time:", elapsed_time)
+                # print("Prev Counter:", prev_counter, "Shake Counter", shaking_counter)
                 
                 if(elapsed_time > 5 and prev_counter == shaking_counter):
                     
@@ -76,10 +109,44 @@ class pp_alarm:
                     shaking_counter = 0
             
             
-            if(shaking_counter > 5):
+            # Triggering Alarm 
+            if(shaking_counter > 2):
                 print("Alarm Triggered")
+                
+                # Pygame Setup
+                self.sound = pygame.mixer.Sound("./sounds/alarm.wav")
+                self.sound.set_volume(0.5)
+                self.sound.play(loops = -1)
+
+                # 1. Make thread and run/ Make process Concurrency 
+                #    Or do Asynchronous through asyncIO on context switching  
+
+                # Pygame Setup
+                # pygame.mixer.init()
+                # speaker_volume = 0.5 # 50% Volume
+        
+                # pygame.mixer.music.set_volume(speaker_volume)
+                # pygame.mixer.music.load( self.path + self.sound_files[1])
+                
+
+                # while 1:
+                    
+                #     print("Producing Sounds")
+
+                #     pygame.mixer.music.play()
+    
+                #     # Wait Until first sound is done
+                #     while pygame.mixer.music.get_busy() == True:
+                #         continue
+            
+                #     time.sleep(0.5)
+                    
+                #     # if flag is true stop producing sound 
+
                 return 
 
             prev_counter = shaking_counter
     
 
+    def disable_alarm(self):
+        self.sound.stop()

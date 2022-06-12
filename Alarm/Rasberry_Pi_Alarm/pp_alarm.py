@@ -24,15 +24,24 @@ class pp_alarm:
             return
         
         # Down Count by 5 seconds
-        self.path = "/home/pi/ECESeniorCapstone/Alarm/Rasberry_Pi_Alarm/"
-        self.sound_files = ["beep.wav", "alarm.wav"]
+        # self.path = "./sounds/"
+        # self.sound_files = ["beep.wav", "alarm.wav"]
 
         # Pygame Setup
-        pygame.mixer.init()
-        speaker_volume = 1 # 50% Volume
+        # pygame.mixer.init()
+        # beep_sound = pygame.mixer.Sound("./sounds/beep.wav")
+        # beep_sound.set_volume(1)
+        # beep_sound.play(loops = 10)
+
+        # for i in range(1,6):
+            
+        #     beep_sound.play(loops = 1)
+        #     time.sleep(0.1) 
+
         
-        pygame.mixer.music.set_volume(speaker_volume)
-        pygame.mixer.music.load( self.path + self.sound_files[0])
+        pygame.mixer.init()
+        pygame.mixer.music.set_volume(1)
+        pygame.mixer.music.load("./sounds/beep.wav")
         pygame.mixer.music.play()
         
         
@@ -105,7 +114,7 @@ class pp_alarm:
                 print("Alarm Triggered")
                 
                 # Pygame Setup
-                self.sound = pygame.mixer.Sound(self.path + self.sound_files[1])
+                self.sound = pygame.mixer.Sound("./sounds/alarm.wav")
                 self.sound.set_volume(0.5)
                 self.sound.play(loops = -1)
 

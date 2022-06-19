@@ -23,22 +23,8 @@ class pp_alarm:
             print("Something Wrong with I2C bus on", hex(self.addr), "\nCheck bus using: i2cdetect -y 1")
             return
         
+
         # Down Count by 5 seconds
-        # self.path = "./sounds/"
-        # self.sound_files = ["beep.wav", "alarm.wav"]
-
-        # Pygame Setup
-        # pygame.mixer.init()
-        # beep_sound = pygame.mixer.Sound("./sounds/beep.wav")
-        # beep_sound.set_volume(1)
-        # beep_sound.play(loops = 10)
-
-        # for i in range(1,6):
-            
-        #     beep_sound.play(loops = 1)
-        #     time.sleep(0.1) 
-
-        
         pygame.mixer.init()
         pygame.mixer.music.set_volume(1)
         pygame.mixer.music.load("./sounds/beep.wav")
@@ -110,7 +96,7 @@ class pp_alarm:
             
             
             # Triggering Alarm 
-            if(shaking_counter > 2):
+            if(shaking_counter > 4):
                 print("Alarm Triggered")
                 
                 # Pygame Setup

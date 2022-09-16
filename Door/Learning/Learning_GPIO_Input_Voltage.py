@@ -17,3 +17,5 @@ while(1):
     else:
         print("Read Low Voltage")
         sleep(.1)
+        
+        

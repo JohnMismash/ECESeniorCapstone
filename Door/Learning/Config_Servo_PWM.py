@@ -19,16 +19,18 @@ myPWM = GPIO.PWM(37, 50)
 
 # RIGHT NOW 2.5 and 8 are values 
 
+# LODL 
+
 
 myPWM.start(0)
 time.sleep(1) # Must Delay for timing 
 
-'''
+
 myPWM.ChangeDutyCycle(2.5)
 time.sleep(1) # Must Delay for timing 
 myPWM.ChangeDutyCycle(0)
 time.sleep(2)
-'''
+
 
 '''
 myPWM.ChangeDutyCycle(9)
@@ -44,17 +46,16 @@ myPWM.ChangeDutyCycle(0)
 time.sleep(2) # Must Delay for timing
 '''
 
-
+'''
 myPWM.ChangeDutyCycle(8)
 time.sleep(1) # Must Delay for timing
 myPWM.ChangeDutyCycle(0)
-
-
 '''
+
 myPWM.ChangeDutyCycle(12.5)
 time.sleep(1) # Must Delay for timing
 myPWM.ChangeDutyCycle(0)
-'''
+
 
 myPWM.stop()
 

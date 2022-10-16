@@ -8,7 +8,7 @@ RFID_Pin = 40;
 GPIO.setup(RFID_Pin, GPIO.IN, pull_up_down = GPIO.PUD_DOWN) # Set Pin with Pull Up Resistor and see 3.3V  
 
 # Magnetic Sensor 
-Magnet_Sensor_Pin = 32;
+Magnet_Sensor_Pin = 32;  
 GPIO.setup(Magnet_Sensor_Pin, GPIO.IN, pull_up_down = GPIO.PUD_UP) # Set Pin with Pull Up Resistor and see 3.3V  
 
 # PWM

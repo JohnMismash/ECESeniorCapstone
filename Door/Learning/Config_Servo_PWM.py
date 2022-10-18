@@ -13,27 +13,49 @@ GPIO.setup(37, GPIO.OUT)
 myPWM = GPIO.PWM(37, 50)
 
 # Start the PWM with Percent of Duty Cycle 0 - 100
+# 12.5 Far right left position 
 # 6.7 Duty Cycle Dead Center unlock position 
-# 2.5 to right lock posistion 
+# 2.5 to right lock position
+
+# RIGHT NOW 2.5 and 8 are values 
+
+# LODL 
+
 
 myPWM.start(0)
 time.sleep(1) # Must Delay for timing 
 
+
 myPWM.ChangeDutyCycle(2.5)
 time.sleep(1) # Must Delay for timing 
 myPWM.ChangeDutyCycle(0)
-
 time.sleep(2)
 
+
+'''
+myPWM.ChangeDutyCycle(9)
+time.sleep(1) # Must Delay for timing
+myPWM.ChangeDutyCycle(0)
+'''
+
+
+'''
 myPWM.ChangeDutyCycle(6.7)
 time.sleep(1) # Must Delay for timing
 myPWM.ChangeDutyCycle(0)
-
 time.sleep(2) # Must Delay for timing
+'''
+
+'''
+myPWM.ChangeDutyCycle(8)
+time.sleep(1) # Must Delay for timing
+myPWM.ChangeDutyCycle(0)
+'''
 
 myPWM.ChangeDutyCycle(12.5)
 time.sleep(1) # Must Delay for timing
 myPWM.ChangeDutyCycle(0)
+
 
 myPWM.stop()
 

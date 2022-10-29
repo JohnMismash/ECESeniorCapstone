@@ -15,7 +15,7 @@ class pp_door:
         __isRFIDActive__ = False
 
         self.RFID_Pin = 40
-        self.Magnet_Sensor_Pin = 32
+        self.Magnet_Sensor_Pin = 38
         self.PWM_Pin = 37
         self.duty_cycle = 0
 
@@ -27,6 +27,7 @@ class pp_door:
         GPIO.setup(self.RFID_Pin, GPIO.IN, pull_up_down = GPIO.PUD_DOWN) # Set Pin with Pull Up Resistor and see 3.3V
         GPIO.setup(self.Magnet_Sensor_Pin, GPIO.IN, pull_up_down = GPIO.PUD_UP) # Set Pin with Pull Up Resistor and see 3.3V
         GPIO.setup(self.PWM_Pin, GPIO.OUT)
+        
         self.myPWM = GPIO.PWM(self.PWM_Pin, 50)  # Create PWM signal with (GPIO Pin Number, frequency)  
         self.myPWM.start(self.duty_cycle)
 
@@ -65,14 +66,13 @@ class pp_door:
 
         checkDoor = GPIO.input(self.Magnet_Sensor_Pin)
 
-        if (checkDoor is not 1):
+        if (checkDoor != 1):
             __isDoorOpen__ = True
         
         else:
             __isDoorOpen__ = False
 
         return __isDoorOpen__
-
     
 
     def isRFIDActivated(self):
@@ -90,14 +90,12 @@ class pp_door:
     def getTimeElapsed(self):
         if self.startTime is None:
             print("Start Time is not initialized!")
+            return 0
 
-        elapsedTime = time.perf_counter() - self._startTime
+        elapsedTime = time.perf_counter() - self.startTime
+        
         return elapsedTime        
 
-    """ Enabling the Alarm: require shaking the box to trigger alarm 
-    """
-    def enable_alarm(self):
-        pass
    
 
 

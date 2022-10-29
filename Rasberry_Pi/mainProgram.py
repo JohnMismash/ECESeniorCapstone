@@ -13,7 +13,9 @@ def break_beam_callback(channel):
 
 def openDoor_callback(self, params, packet):
     # Is door open already?
-    # Call door.openDoor()
+    # if (!door.isDoorOpen()):
+        # door.openDoor()
+        
     print('Message Received: Open Door')
     print('Topic: ' + packet.topic)
     print('Payload: ', (packet.payload))
@@ -76,8 +78,26 @@ GPIO.add_event_detect(BEAM_PIN, GPIO.BOTH, callback=break_beam_callback)
 alarm_system = pp_alarm()
 alarm_system.enable_alarm()
 
-# Enable Door
-
+# door = pp_door()
+# while True:
+    # packageArrival()
+    # theftDetection()
+    
+    # If RFID is activated and door is closed, open the door.
+    # if (door.isRFIDActive() and !door.isDoorOpen()):
+        # door.openDoor()
+        
+    # If the RFID is not activated and the door is open,
+    # check how long the door has been open for.
+    # elif (!door.isRFIDActive() and door.isDoorOpen()):
+        # elapsedTime = door.getElapsedTime()
+        # if (elapsedTime > 30):
+            # if (!door.isDoorOpen()):
+                # LOCK THE DOOR
+                # door.closeDoor()
+            # else:
+                # PLAY ALARM SOUND!
+        
 while True:
     packageArrival()
     time.sleep(15)

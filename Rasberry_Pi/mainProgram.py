@@ -12,6 +12,8 @@ def break_beam_callback(channel):
         print("beam broken")
 
 def openDoor_callback(self, params, packet):
+    # Is door open already?
+    # Call door.openDoor()
     print('Message Received: Open Door')
     print('Topic: ' + packet.topic)
     print('Payload: ', (packet.payload))
@@ -74,7 +76,7 @@ GPIO.add_event_detect(BEAM_PIN, GPIO.BOTH, callback=break_beam_callback)
 alarm_system = pp_alarm()
 alarm_system.enable_alarm()
 
-
+# Enable Door
 
 while True:
     packageArrival()

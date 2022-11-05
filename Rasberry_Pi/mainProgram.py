@@ -2,9 +2,12 @@ import time
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 import RPi.GPIO as GPIO
 from alarm import pp_alarm
+from door import pp_door
 
 from sounds import pp_sounds
 
+global alarmCurrentlyTriggered
+global doorIsInClosedSleepState
 
 BEAM_PIN = 17
 
@@ -15,24 +18,32 @@ def break_beam_callback(channel):
         print("beam broken")
 
 def openDoor_callback(self, params, packet):
-    # Is door open already?
-    # if (!door.isDoorOpen()):
-        # door.openDoor()
-        
     print('Message Received: Open Door')
     print('Topic: ' + packet.topic)
     print('Payload: ', (packet.payload))
+
+    global doorIsInClosedSleepState
+    if not door.isDoorOpen():
+        alarm_system.disable_alarm()
+        door.openLatch()
+        time.sleep(4)
+        doorIsInClosedSleepState = False    
+        
+        
 
 
 def turnOffAlarm_callback(self, params, packet):
     print('Message Received: TURN OFF ALARM')
     print('Topic: ' + packet.topic)
     print('Payload: ', (packet.payload))
+    
+    global alarmCurrentlyTriggered
     if alarm_system.is_alarm_triggered():
         alarm_system.disable_alarm()
         alarm_system.enable_alarm()
         sounds.play_init_sounds()
-        alarm_triggered_count = 0;
+    alarmCurrentlyTriggered = False
+    
         
 
 
@@ -76,9 +87,9 @@ myMQTTClient.subscribe("home/turnOffAlarm", 1, turnOffAlarm_callback)
 
 
 # break beam set up
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(BEAM_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.add_event_detect(BEAM_PIN, GPIO.BOTH, callback=break_beam_callback)
+# GPIO.setmode(GPIO.BCM)
+# GPIO.setup(BEAM_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+# GPIO.add_event_detect(BEAM_PIN, GPIO.BOTH, callback=break_beam_callback)
 
 sounds = pp_sounds()
 
@@ -88,7 +99,7 @@ alarm_system.enable_alarm()
 
 sounds.play_init_sounds()
 
-# door = pp_door()
+door = pp_door()
 # while True:
     # packageArrival()
     # theftDetection()
@@ -107,18 +118,54 @@ sounds.play_init_sounds()
                 # door.closeDoor()
             # else:
                 # PLAY ALARM SOUND!
-alarm_triggered_count = 0;
+
+
+alarmCurrentlyTriggered = False
+rfidCurrentlyTriggered = False
+doorIsInClosedSleepState = True
 
 while True:
-    packageArrival()
-    time.sleep(15)
-    theftDetection()
-    time.sleep(15)
+    # packageArrival()
+    # time.sleep(15)
+
+    # print(door.isDoorOpen())
+    # this acts like a positive edge trigger for the alarm being triggered. So it will only trigger once
+    if (not alarmCurrentlyTriggered) and alarm_system.is_alarm_triggered():
+        alarmCurrentlyTriggered = True
+        theftDetection()
+        sounds.play_alarm_sounds()
+        
+        
     
-    if alarm_system.is_alarm_triggered():
+    # if the user puts rfid on a closed door, open the latch
+    if (not rfidCurrentlyTriggered) and (door.isRFIDActivated() and (not door.isDoorOpen())):
+        door.openLatch()  # unlock the door
+        alarm_system.disable_alarm()  # turn off the alarm
         
-        alarm_triggered_count = alarm_triggered_count + 1;
+        rfidCurrentlyTriggered = True   
+        doorIsInClosedSleepState = False
+        time.sleep(4)
         
-        if(alarm_triggered_count == 1):
-            sounds.play_alarm_sounds()
+        
+    # if the door is fully closed and noRFID, time to lock the door
+    if (not doorIsInClosedSleepState) and (not door.isDoorOpen()) and (not door.isRFIDActivated()):
+        print("close door")
+        time.sleep(4) # we sleep here to let the door be fully closed
+        door.closeLatch()
+        rfidCurrentlyTriggered = False
+        doorIsInClosedSleepState = True
+        alarm_system.enable_alarm()
+        
+        
+    
+            
+    #if (not door.isRFIDActivated() and door.isDoorOpen()):
+        # elapsedTime = door.getElapsedTime()
+        # if (elapsedTime > 30):
+            # if (!door.isDoorOpen()):
+                # LOCK THE DOOR
+                # door.closeDoor()
+            # else:
+                # PLAY ALARM SOUND!
+
 

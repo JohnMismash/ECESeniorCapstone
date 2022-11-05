@@ -68,10 +68,10 @@ class pp_door:
         checkDoor = GPIO.input(self.Magnet_Sensor_Pin)
 
         if (checkDoor != 1):
-            __isDoorOpen__ = True
+            __isDoorOpen__ = False
         
         else:
-            __isDoorOpen__ = False
+            __isDoorOpen__ = True
 
         return __isDoorOpen__
     

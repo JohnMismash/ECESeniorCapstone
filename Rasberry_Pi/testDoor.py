@@ -30,7 +30,7 @@ door.openLatch()
 print(door.isDoorOpen())
 """
 
-""" Test for RFID 
+#Test for RFID 
 while (1):
     if(door.isRFIDActivated() == False):
         print("RFID OFF")
@@ -42,4 +42,3 @@ while (1):
 
 door.openLatch()
 print(door.isDoorOpen())
-"""

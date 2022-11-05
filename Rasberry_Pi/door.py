@@ -2,6 +2,7 @@ import time
 import RPi.GPIO as GPIO
 
 class pp_door:
+    
     global __isDoorOpen__
     global __isRFIDActive__
 
@@ -31,7 +32,7 @@ class pp_door:
         self.myPWM = GPIO.PWM(self.PWM_Pin, 50)  # Create PWM signal with (GPIO Pin Number, frequency)  
         self.myPWM.start(self.duty_cycle)
 
-    def openDoor(self):
+    def openLatch(self):
         global __isDoorOpen__
 
         self.startTime = time.perf_counter()
@@ -46,7 +47,7 @@ class pp_door:
 
         __isDoorOpen__ = True
 
-    def closeDoor(self):
+    def closeLatch(self):
         global __isDoorOpen__
 
         self.duty_cycle = 12.5

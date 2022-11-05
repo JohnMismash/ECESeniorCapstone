@@ -3,6 +3,9 @@ from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 import RPi.GPIO as GPIO
 from alarm import pp_alarm
 
+from sounds import pp_sounds
+
+
 BEAM_PIN = 17
 
 def break_beam_callback(channel):
@@ -28,6 +31,9 @@ def turnOffAlarm_callback(self, params, packet):
     if alarm_system.is_alarm_triggered():
         alarm_system.disable_alarm()
         alarm_system.enable_alarm()
+        sounds.play_init_sounds()
+        alarm_triggered_count = 0;
+        
 
 
 def packageArrival():
@@ -74,9 +80,13 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(BEAM_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.add_event_detect(BEAM_PIN, GPIO.BOTH, callback=break_beam_callback)
 
+sounds = pp_sounds()
+
 # Enable the alarm
 alarm_system = pp_alarm()
 alarm_system.enable_alarm()
+
+sounds.play_init_sounds()
 
 # door = pp_door()
 # while True:
@@ -97,10 +107,18 @@ alarm_system.enable_alarm()
                 # door.closeDoor()
             # else:
                 # PLAY ALARM SOUND!
-        
+alarm_triggered_count = 0;
+
 while True:
     packageArrival()
     time.sleep(15)
     theftDetection()
     time.sleep(15)
+    
+    if alarm_system.is_alarm_triggered():
+        
+        alarm_triggered_count = alarm_triggered_count + 1;
+        
+        if(alarm_triggered_count == 1):
+            sounds.play_alarm_sounds()
 

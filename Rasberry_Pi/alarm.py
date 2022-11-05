@@ -46,6 +46,7 @@ class pp_alarm:
     """
     def enable_alarm(self):
         
+        """
         # Down Count by 5 seconds
         pygame.mixer.init()
         pygame.mixer.music.set_volume(1)
@@ -63,6 +64,7 @@ class pp_alarm:
             time.sleep(0.5) 
         
         print("Alarm Initialized")
+        """
 
         # Multithreading Alarm
         self.practicethread = MyThread(target=self.__theft_detection__)

@@ -9,13 +9,16 @@ from sounds import pp_sounds
 global alarmCurrentlyTriggered
 global doorIsInClosedSleepState
 
-BEAM_PIN = 17
+BEAM_PIN = 11
 
 def break_beam_callback(channel):
     if GPIO.input(BEAM_PIN):
         print("beam unbroken")
     else:
         print("beam broken")
+        # We got a package
+        packageArrival()
+        
 
 def openDoor_callback(self, params, packet):
     print('Message Received: Open Door')
@@ -36,6 +39,8 @@ def turnOffAlarm_callback(self, params, packet):
     print('Message Received: TURN OFF ALARM')
     print('Topic: ' + packet.topic)
     print('Payload: ', (packet.payload))
+    
+    sounds.stop_sounds()
     
     global alarmCurrentlyTriggered
     if alarm_system.is_alarm_triggered():
@@ -87,9 +92,10 @@ myMQTTClient.subscribe("home/turnOffAlarm", 1, turnOffAlarm_callback)
 
 
 # break beam set up
-# GPIO.setmode(GPIO.BCM)
-# GPIO.setup(BEAM_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-# GPIO.add_event_detect(BEAM_PIN, GPIO.BOTH, callback=break_beam_callback)
+GPIO.setmode(GPIO.BOARD) # Pin Number Being Physical Board
+GPIO.setup(BEAM_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.add_event_detect(BEAM_PIN, GPIO.BOTH, callback=break_beam_callback)
+
 
 sounds = pp_sounds()
 

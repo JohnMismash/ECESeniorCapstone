@@ -76,16 +76,25 @@ class pp_alarm:
         global alarm_triggered
 
         while not self.practicethread.stopped():
-            self.bus.write_byte_data(self.addr, 0x11, 0x60); # Set Accelerometer to High Performance Mode:
 
-            x_low = self.bus.read_byte_data(self.addr, 0x22);
-            x_high = self.bus.read_byte_data(self.addr, 0x23);
+            self.bus.write_byte_data(self.addr, 0x11, 0x60); # Set Accelerometer to High Performance Mode:
+            x_low = self.bus.read_byte_data(self.addr, 0x22)
+            x_high = self.bus.read_byte_data(self.addr, 0x23)
             x_val = np.int16(((x_high << 8) |  x_low))
-            
-            # print("X Value: ", hex(x_val), " = ", abs(x_val))
+
+            self.bus.write_byte_data(self.addr, 0x11, 0x60); # Set Accelerometer to High Performance Mode:
+            y_low = self.bus.read_byte_data(self.addr, 0x24)
+            y_high = self.bus.read_byte_data(self.addr, 0x25)
+            y_val = np.int16(((y_high << 8) |  y_low))
     
-            if(abs(x_val) > 4000 and (alarm_triggered == False)):
-                
+            self.bus.write_byte_data(self.addr, 0x11, 0x60); # Set Accelerometer to High Performance Mode:
+            z_low = self.bus.read_byte_data(self.addr, 0x26)
+            z_high = self.bus.read_byte_data(self.addr, 0x27)
+            z_val =  np.int16((z_high << 8) |  z_low)
+
+            # Newly Recorded Values: if x, y, and z exceed 800.
+            if((abs(x_val) > 800 or abs(y_val) > 800 or abs(z_val) > 800)and (alarm_triggered == False)):
+               
                 print("Alarm Triggered")
                 
                 # Pygame Setup

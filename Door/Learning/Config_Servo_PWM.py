@@ -52,9 +52,9 @@ time.sleep(1) # Must Delay for timing
 myPWM.ChangeDutyCycle(0)
 '''
 
-myPWM.ChangeDutyCycle(12.5)
-time.sleep(1) # Must Delay for timing
-myPWM.ChangeDutyCycle(0)
+#myPWM.ChangeDutyCycle(12.5)
+#time.sleep(1) # Must Delay for timing
+#myPWM.ChangeDutyCycle(0)
 
 
 myPWM.stop()

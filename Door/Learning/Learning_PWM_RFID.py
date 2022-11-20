@@ -20,6 +20,8 @@ duty_cycle = 0
 while(1):
     
     if(GPIO.input(Input_Voltage_Pin) == 1):
+
+        print("Reading High")
         
         if(duty_cycle != 2.5):
             
@@ -32,6 +34,8 @@ while(1):
         
     else:
         
+        print("Reading Low")
+
         if(duty_cycle != 12.5):
             
             print("Close Door")

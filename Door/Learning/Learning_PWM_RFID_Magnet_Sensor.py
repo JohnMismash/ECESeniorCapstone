@@ -1,6 +1,8 @@
 import time 
 import RPi.GPIO as GPIO
 
+#GPIO.cleanup()
+
 GPIO.setmode(GPIO.BOARD) # Pin Number Being Physical Board
 
 # RFID Pin
@@ -8,7 +10,7 @@ RFID_Pin = 40;
 GPIO.setup(RFID_Pin, GPIO.IN, pull_up_down = GPIO.PUD_DOWN) # Set Pin with Pull Up Resistor and see 3.3V  
 
 # Magnetic Sensor 
-Magnet_Sensor_Pin = 32;  
+Magnet_Sensor_Pin = 38;  
 GPIO.setup(Magnet_Sensor_Pin, GPIO.IN, pull_up_down = GPIO.PUD_UP) # Set Pin with Pull Up Resistor and see 3.3V  
 
 # PWM
@@ -20,9 +22,9 @@ myPWM.start(0)
 duty_cycle = 0  
 
 while(1):
-    
+    print("Loop")
     if(GPIO.input(RFID_Pin) == 1):
-        
+        print("RFID Triggered")
         if(duty_cycle != 2.5):
             
             print("Open Door")

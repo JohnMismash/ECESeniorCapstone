@@ -106,25 +106,6 @@ alarm_system.enable_alarm()
 sounds.play_init_sounds()
 
 door = pp_door()
-# while True:
-    # packageArrival()
-    # theftDetection()
-    
-    # If RFID is activated and door is closed, open the door.
-    # if (door.isRFIDActive() and !door.isDoorOpen()):
-        # door.openDoor()
-        
-    # If the RFID is not activated and the door is open,
-    # check how long the door has been open for.
-    # elif (!door.isRFIDActive() and door.isDoorOpen()):
-        # elapsedTime = door.getElapsedTime()
-        # if (elapsedTime > 30):
-            # if (!door.isDoorOpen()):
-                # LOCK THE DOOR
-                # door.closeDoor()
-            # else:
-                # PLAY ALARM SOUND!
-
 
 alarmCurrentlyTriggered = False
 rfidCurrentlyTriggered = False

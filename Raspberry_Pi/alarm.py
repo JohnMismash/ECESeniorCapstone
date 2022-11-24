@@ -28,14 +28,12 @@ class pp_alarm:
     """ Constructor for the alarm system. Test to see if the i2c bus can be reached. 
     """
     def __init__(self):
-        
-        self.bus = SMBus(1) # Create a new I2C-1 bus
-        self.addr = 0x6A
-        
 
         print("Starting I2C Protocal Communication with Acceloerometer")
         
         try:
+            self.bus = SMBus(1) # Create a new I2C-1 bus
+            self.addr = 0x6A
             val = self.bus.read_byte_data(0x6A, 0x0F); # Who AM I Protocal
         except:
             print("Something Wrong with I2C bus on", hex(self.addr), "\nCheck bus using: i2cdetect -y 1")
@@ -45,26 +43,6 @@ class pp_alarm:
     """ Enabling the Alarm: require shaking the box to trigger alarm 
     """
     def enable_alarm(self):
-        
-        """
-        # Down Count by 5 seconds
-        pygame.mixer.init()
-        pygame.mixer.music.set_volume(1)
-        pygame.mixer.music.load("./sounds/beep.wav")
-        pygame.mixer.music.play()
-        
-        
-        for i in range(1,6):
-            pygame.mixer.music.play()
-    
-            # Wait Until first sound is done
-            while pygame.mixer.music.get_busy() == True:
-                continue
-            
-            time.sleep(0.5) 
-        
-        print("Alarm Initialized")
-        """
 
         # Multithreading Alarm
         self.practicethread = MyThread(target=self.__theft_detection__)
@@ -98,10 +76,11 @@ class pp_alarm:
                 print("Alarm Triggered")
                 
                 # Pygame Setup
-                self.sound = pygame.mixer.Sound("./sounds/alarm.wav")
-                self.sound.set_volume(0.5)
-                self.sound.play(loops = -1)
-                alarm_triggered = True 
+                #self.sound = pygame.mixer.Sound("./sounds/alarm.wav")
+                #self.sound.set_volume(0.5)
+                #self.sound.play(loops = -1)
+                #alarm_triggered = True 
+                
                 return 
                 
      

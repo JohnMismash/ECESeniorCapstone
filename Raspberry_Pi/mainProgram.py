@@ -1,6 +1,29 @@
+#from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
+#from /home/username/.local/lib/python3.9/site-packages/AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient  
+# import importlib.util
+# import sys
+# spec = importlib.util.spec_from_file_location("AWSIoTPythonSDK.MQTTLib", "/home/username/.local/lib/python3.9/site-packages/AWSIoTPythonSDK/MQTTLib.py")
+# AWSIoTMQTTClient = importlib.util.module_from_spec(spec)
+# sys.modules["AWSIoTPythonSDK.MQTTLib"] = AWSIoTMQTTClient
+# spec.loader.exec_module(AWSIoTMQTTClient)
+#from .home.username.porchPirates.ECESeniorCapstone.Raspberry_Pi.alarm.py import pp_alarm
+# /home/username/porchPirates/ECESeniorCapstone/Raspberry_Pi/alarm.py
+
+#import sys
+#sys.path.insert(1, '/home/username/.local/lib/python3.9/site-packages/AWSIoTPythonSDK.MQTTLib')
+#import AWSIoTMQTTClient
+
+import sys
+
+print("Starting Import")
+sys.path.insert(1, '/home/username/.local/lib/python3.9/site-packages/AWSIoTPythonSDK')
+from MQTTLib import AWSIoTMQTTClient as AWSIoTMQTTClient
+
+#from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
+
 import time
-from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 import RPi.GPIO as GPIO
+
 from alarm import pp_alarm
 from door import pp_door
 
@@ -112,7 +135,9 @@ rfidCurrentlyTriggered = False
 doorIsInClosedSleepState = True
 
 while True:
-    # packageArrival()
+    
+    packageArrival()
+    time.sleep(2)
     # time.sleep(15)
 
     # print(door.isDoorOpen())

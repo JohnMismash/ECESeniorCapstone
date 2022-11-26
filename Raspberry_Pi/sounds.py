@@ -16,7 +16,7 @@ class pp_sounds:
         except:
             pass
         
-        self.sound = pygame.mixer.Sound("./sounds/beep.wav")
+        self.sound = pygame.mixer.Sound("/home/username/porchPirates/ECESeniorCapstone/Raspberry_Pi/sounds/beep.wav")
         self.sound.set_volume(1)
         
         for i in range(1,6):
@@ -33,7 +33,7 @@ class pp_sounds:
         except:
             pass
         
-        self.sound = pygame.mixer.Sound("./sounds/alarm.wav")
+        self.sound = pygame.mixer.Sound("/home/username/porchPirates/ECESeniorCapstone/Raspberry_Pi/sounds/alarm.wav")
         self.sound.set_volume(1)
         self.sound.play(loops = -1)
         

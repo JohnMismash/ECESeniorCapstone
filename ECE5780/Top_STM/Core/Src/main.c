@@ -96,6 +96,8 @@ void DistanceSensor_Init(void);
 void LimitSwitch_Init(void);
 
 int READY_TO_GO;
+
+int stoppedMotor;
 	
 /* USER CODE END PFP */
 
@@ -132,7 +134,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   int readVal;
   int count = 0;
+	
+	
   READY_TO_GO = 1;
+	stoppedMotor = 0;
   
 
   while (1){
@@ -141,6 +146,7 @@ int main(void)
 		readVal = ADC1->DR; 
 		if(readVal > 2000){
       count++;
+			GPIOC->ODR |= (1<<9);  //green
     }
 		else{
       GPIOC->ODR &= ~(1<<6);  //red
@@ -152,15 +158,25 @@ int main(void)
 
     // If we get to this, we have had success and the sensor has picked up the package. So next step
     if( (count>100) && READY_TO_GO){
+			/*
       GPIOC->ODR |= (1<<6);  //red
       GPIOC->ODR |= (1<<7);  //blue
       GPIOC->ODR |= (1<<8);  //orange
       GPIOC->ODR |= (1<<9);  //green
-       
+       */
+			
+			
 	    READY_TO_GO = 0;
 
       TransmitToBottomBoard(START_MOTOR);  
+			GPIOC->ODR |= (1<<6);  //red
     }
+		
+		if (stoppedMotor) {	
+			//Let the bottom board know its at the top.
+			TransmitToBottomBoard(REACHED_TOP);
+			stoppedMotor = 0;
+		}
   }
 }
 
@@ -247,12 +263,14 @@ void LimitSwitch_Init(void){
 void EXTI0_1_IRQHandler(void){
   // Send signal to bottom board to turn off the motor
   TransmitToBottomBoard(STOP_MOTOR);
+	
+	GPIOC->ODR |= (1<<7);  //blue
 
   //Allow the distance sensor to begin sensing packages again
   READY_TO_GO = 1;
 	
-	//Let the bottom board know its at the top.
-	TransmitToBottomBoard(REACHED_TOP);
+	//Indicate stopped motor
+	stoppedMotor = 1;
 
 	// TURN OFF THE INTERRUPT SIGNAL
 	EXTI->PR |= (1<<0);

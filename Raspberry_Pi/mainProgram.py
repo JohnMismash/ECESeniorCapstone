@@ -135,11 +135,6 @@ rfidCurrentlyTriggered = False
 doorIsInClosedSleepState = True
 
 while True:
-    
-    packageArrival()
-    time.sleep(2)
-    # time.sleep(15)
-
     # print(door.isDoorOpen())
     # this acts like a positive edge trigger for the alarm being triggered. So it will only trigger once
     if (not alarmCurrentlyTriggered) and alarm_system.is_alarm_triggered():

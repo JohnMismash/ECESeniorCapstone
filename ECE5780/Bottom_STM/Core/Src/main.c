@@ -141,6 +141,11 @@ int main(void)
 
   /* USER CODE BEGIN WHILE */
   while (1){
+		//Let motor run for now
+		motor_forward();
+		motor_run(10);
+		
+		/*
 	  HAL_Delay(200);
 	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
 		
@@ -150,7 +155,9 @@ int main(void)
 			motor_run(10);
 			motorReverse = 0;
 			cycleTriggered = 1; //Prevent triggering more raising if limit switch is bumped by something other than the lid.
+		
 		}
+		*/
   }
 }
 

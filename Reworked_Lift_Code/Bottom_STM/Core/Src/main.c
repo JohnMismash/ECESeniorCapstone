@@ -174,7 +174,7 @@ int main(void)
 		//LED Debugging help. Indicate which state we are in
 		if (lifting) {
 			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET); //Red
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET); //Blue off
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET); //Blue off
 		}
 		
 		if (lowering) {
@@ -183,8 +183,9 @@ int main(void)
 		}
 		
 		//Handle motor controls by directly reading limit switch value (high, low)
-		if(GPIOA->IDR & (1<<1)) { //Read PA1 value for top limit switch
+		if(GPIOB->IDR & (1<<1)) { //Read PA1 value for top limit switch
 			//We only care about the top limit switch if we are lifting.
+			//HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
 			if (lifting) {
 				//Stop the motor
 				motor_hold();
@@ -197,7 +198,7 @@ int main(void)
 				lowering = 0;
 				
 				//Turn off lifting LED
-				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET); //Blue off
+				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET); //Blue off
 				
 				//Turn on green to indicate we are ready!
 				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
@@ -329,7 +330,7 @@ void Top_LimitSwitch_Init(void){
 															GPIO_SPEED_FREQ_LOW,
 															GPIO_PULLUP};
 	
-  HAL_GPIO_Init(GPIOA, &initStr); // INIT PA1.
+  HAL_GPIO_Init(GPIOB, &initStr); // INIT PA1.
 
 															/*
   EXTI -> IMR |= (1 << 1);         // CREATE AS A INTERRUPT SIGNAL, NOT EVENT SIGNAL.	

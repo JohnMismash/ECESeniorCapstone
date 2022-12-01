@@ -3,13 +3,20 @@
 
 PIN ASSIGNMENT:
 PB10/PB11 - USART Interface
-PA0 - Limit Switch Signal Pin
+PA0 - BOTTOM Limit Switch Signal Pin
+PA1 - TOP Limit Switch Signal Pin
 PC6-9 - LED Pins
 
 ---------------------------------------------------------------------------
-HOW	TO WIRE THE LIMIT SWITCH:
+HOW	TO WIRE THE BOTTOM LIMIT SWITCH:
 1. Black wire goes to PA0 (It is NOT grounded!)
 2. Yellow wire goes to 3V pin on board
+---------------------------------------------------------------------------
+
+---------------------------------------------------------------------------
+HOW	TO WIRE THE TOP LIMIT SWITCH:
+1. Black wire goes to PA1 (It is NOT grounded!)
+2. Yellow wire goes to 3V pin on *THE TOP STM BOARD*
 ---------------------------------------------------------------------------
 
 ---------------------------------------------------------------------------
@@ -24,9 +31,8 @@ HOW TO WIRE THE MOTOR CONNECTION:
 1. ENABLE on motor controller connects to PA4
 2. INPUT 1 on the motor controller connects to PA5
 3. INPUT 2 on the motor controller connects to PC0
-4. I_SENSE on the motor controller connects to PA1 (Not yet tested).
-5. Both grounds on the  motor controller connects to ground on the STM board.
-6. 5 Volts on the motor controller connects to 5 volts on the STM board
+4. Both grounds on the  motor controller connects to ground on the STM board.
+5. 5 Volts on the motor controller connects to 5 volts on the STM board
 ---------------------------------------------------------------------------
 
 V1 Implementation of Inter-board communication via USART.  Boards will speak to each other
@@ -88,8 +94,16 @@ char START_MOTOR = 'S';
 char STOP_MOTOR = 'X';
 char REACHED_TOP = 'R';
 
-char motorReverse = 0; //Flag that tells the system it can initiate lifting sequence.
+char motorLower = 0; 
+char motorLift = 0; //Flag that tells the system it can initiate lifting sequence.
 char cycleTriggered = 0; //Prevents accidental limit switch trigger.
+
+char readyForPackage = 1;
+char processTopLimitSwitch = 0;
+char processBottomLimitSwitch = 0;
+
+char lifting = 0;
+char lowering = 0;
 	
 /* USER CODE END PV */
 
@@ -103,7 +117,7 @@ void TransmitToTopBoard(char);
 void ReceiveFromTopBoard(uint8_t);
 void LED_Init(void);
 void USART_Init(void);
-void LimitSwitch_Init(void);
+void Bottom_LimitSwitch_Init(void);
 
 /* USER CODE END PFP */
 /* Private user code ---------------------------------------------------------*/
@@ -134,30 +148,58 @@ int main(void)
 	
   LED_Init();
   USART_Init();
-  LimitSwitch_Init();
+  Bottom_LimitSwitch_Init();
 	motor_init();
+	
 															 
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN WHILE */
   while (1){
-		//Let motor run for now
-		motor_forward();
-		motor_run(10);
-		
+
 		/*
-	  HAL_Delay(200);
-	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
-		
-		if(motorReverse == 1 && cycleTriggered == 0){
-			HAL_Delay(1000); //TO DO: Determine the delay for the lid at the bottom position.
-			motor_reverse();
-			motor_run(10);
-			motorReverse = 0;
-			cycleTriggered = 1; //Prevent triggering more raising if limit switch is bumped by something other than the lid.
-		
-		}
+			Top board USART interrupt begins this whole process.
+			
+			This loop only toggles orange LED and then controls motor based on its state (lifting/lowering).
+			Once its state has been processed, it ignores the limit switch. This prevents the interrupt starvation
+			issue.
 		*/
+			
+	  //HAL_Delay(200);
+	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8); //Orange is waiting
+		
+		//LED Debugging help. Indicate which state we are in
+		if (lifting) {
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET); //Red
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET); //Blue off
+		}
+		
+		if (lowering) {
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET); //Blue
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET); //Red off
+		}
+		
+		if(GPIOA->IDR & (1<<0)) { //Read PA0 value for bottom limit switch
+			//We only care about the bottom limit switch when we are lowering.
+			//Limit switch will read constant high for a bit while the lift raises.
+			if (lowering) {
+				//Stop the motor
+				motor_hold();
+				
+				//Pause to allow the motor to stop.
+				HAL_Delay(1000);
+				
+				//Switch motor to RAISE lift.
+				motor_reverse();
+				
+				//Turn motor on.
+				motor_run(10);
+				
+				//Indicate we are lifting
+				lifting = 1;
+				lowering = 0;
+			}			
+		}
   }
 }
 
@@ -226,7 +268,7 @@ void USART_Init(void){
 
 
 // INITIALIZE LIMIT SWITCH INTERFACE
-void LimitSwitch_Init(void){
+void Bottom_LimitSwitch_Init(void){
 
 	// USE THE RCC TO ENABLE THE SYSCFG PERIPHERAL CLK
   __HAL_RCC_SYSCFG_CLK_ENABLE();
@@ -239,12 +281,14 @@ void LimitSwitch_Init(void){
 	
   HAL_GPIO_Init(GPIOA, &initStr); // INIT PA0.
 
+	/*
   EXTI -> IMR |= (1 << 0);         // CREATE AS A INTERRUPT SIGNAL, NOT EVENT SIGNAL.	
   EXTI -> RTSR |= (1 << 0);	     	 // ENABLES RISING TRIGGER EVENT FOR PA0.
-  SYSCFG -> EXTICR[0] |= 0;        // ROUTE PA0 TO THE EXTI INPUT LINE 0 (EXTI0).
+	EXTI->FTSR &= ~(1 << 0); 						//DISABLE FALLING EDGE TRIGGER FOR PA1
+	SYSCFG->EXTICR[0] &= ~(0xf << 0);  // ROUTE PA0 TO THE EXTI INPUT LINE 0 (EXTI0). Clear lower 4 bits of EXTICR register to select PA0.
   NVIC_EnableIRQ(EXTI0_1_IRQn);    // ENABLE THE EXTI INTERRUPT.	
+															*/
 }
-
 
 /**
   * @brief System Clock Configuration
@@ -339,16 +383,27 @@ void USART3_4_IRQHandler(void){
 }
 
 
-
-//(BOTTOM) LIMIT SWITCH INTERRUPT HANDLER
+/*
+//LIMIT SWITCH INTERRUPT HANDLER
 void EXTI0_1_IRQHandler(void){
+	
+	//Any limit switch trigger should turn the motor OFF.
+	motor_hold();
+	
+	//TOP Limit switch triggered interrupt
+	if (EXTI->PR & (1<<1))    // If the PA1 triggered the interrupt
+	{
+		//Re-enable the bottom limit switch interrupt
+		NVIC_EnableIRQ(EXTI0_1_IRQn); 
+		
+		//flag = 1;
+		EXTI->PR |= (1<<1);  // Clear the interrupt flag by writing a 1 
+	}
 
 	// TURN OFF LED
 	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
 	
-	// TODO: TURN OFF MOTOR
-	motor_hold();
-	motorReverse = 1;
+	motorLift = 1;
 	
 	//DISABLE THE INTERRUPT
 	NVIC_DisableIRQ(EXTI0_1_IRQn);
@@ -356,7 +411,7 @@ void EXTI0_1_IRQHandler(void){
 	// TURN OFF THE INTERRUPT SIGNAL
 	EXTI->PR |= (1<<0);
 }
-
+*/
 
 // TRANSMITS A MESSAGE TO THE TOP BOARD
 void TransmitToTopBoard(char message){
@@ -374,19 +429,28 @@ void ReceiveFromTopBoard(uint8_t read_data){
 	if(read_data == START_MOTOR){
 		
 		//START THE MOTOR
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
 		motor_forward();
 		motor_run(10);
+		
+		//Indicate we are in lowering mode
+		lowering = 1;
+		lifting = 0;
 	}
 	
 	if (read_data == STOP_MOTOR){
+		//fixed = 0;
 		motor_hold();
+		lifting = 0;
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
 	}
 	
-	//Re-enable the bottom limit switch interrupt.
+	/*//Re-enable the bottom limit switch interrupt.
 	if(read_data == REACHED_TOP){
 		NVIC_EnableIRQ(EXTI0_1_IRQn); 
 	}
+	*/
 }
 
 #ifdef  USE_FULL_ASSERT

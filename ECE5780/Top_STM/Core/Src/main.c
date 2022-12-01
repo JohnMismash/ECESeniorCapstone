@@ -29,6 +29,12 @@ HOW	TO WIRE THE DISTANCE SENSOR:
 
 V1 Implementation of Inter-board communication via UART.  Boards will speak to each other
 		Testing will involve pressing a button to signal another STM board to turn on an LED
+		
+V2 Removing interrupt and implementing a fire-and-forget message protocol. 
+	 If the package is sensed, send the start motor signal. Do not check for top switch until that register is no longer high. Then next 
+	 time that it is high, we want to fire the stop motor message and be ready to receive another package.
+			
+		
 
 ******************************************************************************
 * @file           : main.c
@@ -78,7 +84,6 @@ V1 Implementation of Inter-board communication via UART.  Boards will speak to e
 
 char START_MOTOR = 'S';
 char STOP_MOTOR = 'X';
-char REACHED_TOP = 'R';
 
 /* USER CODE END PV */
 
@@ -89,7 +94,6 @@ void SystemClock_Config(void);
 void TransmitChar (char );
 void TransmitString (char* );
 void TransmitToBottomBoard(char);
-void ReceiveFromBottomBoard(uint8_t );
 void LED_Init(void);
 void USART_Init(void);
 void DistanceSensor_Init(void);
@@ -97,7 +101,7 @@ void LimitSwitch_Init(void);
 
 int READY_TO_GO;
 
-int stoppedMotor;
+int INITIAL_STATE;
 	
 /* USER CODE END PFP */
 
@@ -116,6 +120,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
+	__HAL_RCC_GPIOA_CLK_ENABLE();
 	__HAL_RCC_GPIOB_CLK_ENABLE();
 	__HAL_RCC_USART3_CLK_ENABLE();
 	
@@ -137,12 +142,14 @@ int main(void)
 	
 	
   READY_TO_GO = 1;
-	stoppedMotor = 0;
+	INITIAL_STATE = 1;
   
 
   while (1){
-
+		
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8); //Orange is waitin
    //range on readVal is aprox between 500 and 3000
+		//CODE DETECTS FOR PACKAGE THAT IS IN PLACE FOR 100 cycles
 		readVal = ADC1->DR; 
 		if(readVal > 2000){
       count++;
@@ -151,31 +158,50 @@ int main(void)
 		else{
       GPIOC->ODR &= ~(1<<6);  //red
       GPIOC->ODR &= ~(1<<7);  //blue
-      GPIOC->ODR &= ~(1<<8);  //orange
+      //GPIOC->ODR &= ~(1<<8);  //orange
       GPIOC->ODR &= ~(1<<9);  //green
       count=0;
    }
 
-    // If we get to this, we have had success and the sensor has picked up the package. So next step
-    if( (count>100) && READY_TO_GO){
-			/*
-      GPIOC->ODR |= (1<<6);  //red
-      GPIOC->ODR |= (1<<7);  //blue
-      GPIOC->ODR |= (1<<8);  //orange
-      GPIOC->ODR |= (1<<9);  //green
-       */
-			
-			
+    // Triggers true if package is present. Able to send signal to start motor
+    if( (count>100) && READY_TO_GO){			
 	    READY_TO_GO = 0;
 
       TransmitToBottomBoard(START_MOTOR);  
-			GPIOC->ODR |= (1<<6);  //red
+			GPIOC->ODR |= (1<<7);  //blue
     }
 		
-		if (stoppedMotor) {	
-			//Let the bottom board know its at the top.
-			TransmitToBottomBoard(REACHED_TOP);
-			stoppedMotor = 0;
+		
+		//This will detect when the top limit switch is triggered
+		if(GPIOA->IDR & (0x1)) { //Read PA0 value for top limit switch		
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET); //RED is waitin
+
+			//Condition where we just got a package and the top limit switch is high. At beginning of lift cycle the top switch is triggered because 
+			//the up resting position pushes on the switch.
+			if(INITIAL_STATE){
+				//Don't worry about it
+				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET); //Orange is waitin
+
+				continue;
+			}
+			
+			//The lift must be coming back up and we have to send the signal to stop
+			else{
+				//Stop the motor i.e. fire and forget
+				TransmitToBottomBoard(STOP_MOTOR);
+				
+				//Pause to allow the motor to stop.
+				HAL_Delay(1000);
+				
+				//Prepare to receive next package
+				READY_TO_GO = 1;				
+				INITIAL_STATE = 1;
+				count = 0;
+			}			
+		}
+		
+		else{ // If the board is not detecting the limit switch, then it is not at the top and we are no longer in the initial state.
+			INITIAL_STATE = 0;
 		}
   }
 }
@@ -238,6 +264,7 @@ void USART_Init(void){
 
 
 // INITIALIZE LIMIT SWITCH INTERFACE
+//When switch is triggered, a high voltage is sent to the pin so we want a ground signal when no input is given
 void LimitSwitch_Init(void){
 
 	// USE THE RCC TO ENABLE THE SYSCFG PERIPHERAL CLK
@@ -247,19 +274,19 @@ void LimitSwitch_Init(void){
   GPIO_InitTypeDef initStr = {GPIO_PIN_0,
 															GPIO_MODE_INPUT,
 															GPIO_SPEED_FREQ_LOW,
-															GPIO_PULLUP};
+															GPIO_PULLDOWN};
 	
   HAL_GPIO_Init(GPIOA, &initStr); // INIT PA0.
 
-  EXTI -> IMR |= (1 << 0);         // CREATE AS A INTERRUPT SIGNAL, NOT EVENT SIGNAL.	
+  /*EXTI -> IMR |= (1 << 0);         // CREATE AS A INTERRUPT SIGNAL, NOT EVENT SIGNAL.	
   EXTI -> RTSR |= (1 << 0);	     	 // ENABLES RISING TRIGGER EVENT FOR PA0.
   SYSCFG -> EXTICR[0] |= 0;        // ROUTE PA0 TO THE EXTI INPUT LINE 0 (EXTI0).
-  NVIC_EnableIRQ(EXTI0_1_IRQn);    // ENABLE THE EXTI INTERRUPT.	
+  //NVIC_EnableIRQ(EXTI0_1_IRQn);    // ENABLE THE EXTI INTERRUPT.	*/
 }
 
 
 
-// LIMIT SWITCH INTERRUPT HANDLER
+/*// LIMIT SWITCH INTERRUPT HANDLER
 void EXTI0_1_IRQHandler(void){
   // Send signal to bottom board to turn off the motor
   TransmitToBottomBoard(STOP_MOTOR);
@@ -277,7 +304,7 @@ void EXTI0_1_IRQHandler(void){
 	
 	
 }
-
+*/
 
 
 // INITIALIZE DISTANCE SENSOR & ADC (ANALOG TO DIGITAL CONVERTER) INTERFACE
@@ -428,7 +455,7 @@ void TransmitString (char* x){
 }
 /* USER CODE END 4 */
 
-void USART3_4_IRQHandler(void){
+/*void USART3_4_IRQHandler(void){
 	
 	// RECEIVE DATA WHEN INTERRUPT HANDLER IS TRIGGERED.
 	uint8_t read_data = USART3 -> RDR;
@@ -440,18 +467,13 @@ void USART3_4_IRQHandler(void){
 	USART3 -> ISR &= ~(1<<5);// RXNE REGISTER
 	USART3 -> ISR &= ~(1<<3);// ORE REGISTER
 }
-
+*/
 // TRANSMITS A MESSAGE TO THE BOTTOM BOARD
 void TransmitToBottomBoard(char myChar){
 	
 	/* MESSAGE FROM TOP BOARD TO BOTTOM BOARD */
 	TransmitChar(myChar);
 
-}
-
-// RECEIVES A MESSAGE FROM THE BOTTOM BOARD
-void ReceiveFromBottomBoard(uint8_t read_data){
-	
 }
 
 #ifdef  USE_FULL_ASSERT

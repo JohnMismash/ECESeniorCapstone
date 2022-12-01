@@ -183,7 +183,7 @@ int main(void)
 		}
 		
 		//Handle motor controls by directly reading limit switch value (high, low)
-		if(GPIOB->IDR & (1<<1)) { //Read PA1 value for top limit switch
+		if(GPIOB->IDR & (1<<0)) { //Read PA1 value for top limit switch
 			//We only care about the top limit switch if we are lifting.
 			//HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
 			if (lifting) {
@@ -325,7 +325,7 @@ void Top_LimitSwitch_Init(void){
   //__HAL_RCC_SYSCFG_CLK_ENABLE();
 
   // INIT PIN PA1 TO INPUT MODE.
-  GPIO_InitTypeDef initStr = {GPIO_PIN_1,
+  GPIO_InitTypeDef initStr = {GPIO_PIN_0,
 															GPIO_MODE_INPUT,
 															GPIO_SPEED_FREQ_LOW,
 															GPIO_PULLUP};

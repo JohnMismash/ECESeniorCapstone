@@ -23,6 +23,20 @@ Sensor Testing: Basic Arduino code and schematics that were used to determine ho
 ### Block Diagram
 ![Our Block Diagram](https://github.com/JohnMismash/ECESeniorCapstone/blob/main/Motor%20Calculations/5780BlockDiagram%20-%20Page%201.png)
 
+### Alarm System, Door Mechanism, and Mobile App 
+The raspberry pi uses the I2C bus protocol to read accelerometer values in X, Y, and Z values. If any of those values exceed a certain threshold, the raspberry pi plays an alarm sound through the speaker. The door mechanism is controlled through a PWM signal from the raspberry pi, which changes the direction of the servo. And finally, the raspberry pi integration is though the amazon web server. 
+
+### Folders in the Repo  
+Alarm: Contains the C code for alarm system
+Door: Contains the python code for the door mechanism 
+Rasberry_Pi: Contains the Raspberry_Pi code 
+
+### Block Diagram for Rasberry Pi 
+
+
+
+
+
 ### Team Members:
  John 'Jack' Mismash - u1179865,
  Andrew Porter - u1071655,

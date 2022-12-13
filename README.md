@@ -32,10 +32,7 @@ Door: Contains the python code for the door mechanism
 Rasberry_Pi: Contains the Raspberry_Pi code 
 
 ### Block Diagram for Rasberry Pi 
-
-
-
-
+![Rasberry Pi Diagram](https://github.com/JohnMismash/ECESeniorCapstone/blob/Final/Motor%20Calculations/Pi.png)
 
 ### Team Members:
  John 'Jack' Mismash - u1179865,
